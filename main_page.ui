@@ -20,7 +20,8 @@
    <string>Главная страница</string>
   </property>
   <property name="windowIcon">
-   <iconset theme="computer"/>
+   <iconset theme="computer">
+    <normaloff>../../.designer/backup</normaloff>../../.designer/backup</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_2">
@@ -176,7 +177,7 @@
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>Images/update.png</normaloff>Images/update.png</iconset>
+        <normaloff>../../.designer/backup/Images/update.png</normaloff>../../.designer/backup/Images/update.png</iconset>
       </property>
       <property name="iconSize">
        <size>

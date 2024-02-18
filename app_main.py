@@ -1,6 +1,6 @@
 import sys
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QApplication, QWidget, QMessageBox, QMainWindow, QTableWidgetItem, QHeaderView, QDialog, QFormLayout, QComboBox
+from PyQt6.QtWidgets import QApplication, QWidget, QMessageBox, QMainWindow, QTableWidgetItem, QHeaderView, QDialog, QGridLayout, QComboBox
 from login_form import Ui_login_form
 from main_file import *
 from add_task import Ui_Dialog
@@ -13,7 +13,7 @@ class Login(QWidget):
 
         self.ui = Ui_login_form()       
         self.ui.setupUi(self)
-
+        self.ui.password_text.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.ui.btn_login.clicked.connect(self.check_authorization)
         self.show()
 
@@ -38,9 +38,9 @@ class MainPage(QMainWindow):
         
         self.ui.main_tasks_list.setHorizontalHeaderLabels(["Задача", "Исполнители", "Статус"])
 
-        self.ui.main_tasks_list.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self.ui.main_tasks_list.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        self.ui.main_tasks_list.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
+        # for index in range(0, 2):
+        #     self.ui.main_tasks_list.horizontalHeader().setSectionResizeMode(index, QHeaderView.ResizeMode.Stretch)
+
         self.update_task_list()
         self.ui.main_add_task.clicked.connect(self.show_add_task_dialog)
         self.ui.update_tasks_list.clicked.connect(self.update_task_list)
@@ -56,9 +56,10 @@ class MainPage(QMainWindow):
         row = 0
         for task in select_tasks():
             self.ui.main_tasks_list.insertRow(row)
-            self.ui.main_tasks_list.setItem(row, 0, QTableWidgetItem(task[0]))
-            self.ui.main_tasks_list.setItem(row, 1, QTableWidgetItem(task[1]))
-            self.ui.main_tasks_list.setItem(row, 2, QTableWidgetItem(task[2]))
+
+            for index in range(0, 3):
+                self.ui.main_tasks_list.setItem(row, index, QTableWidgetItem(task[index]))
+
             item = self.ui.main_tasks_list.item(row, 2)
             item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
@@ -67,19 +68,46 @@ class MainPage(QMainWindow):
 class AddTaskDialog(QDialog):
     def __init__(self):
         super().__init__()
-
+        self.workers = []
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
-
-        self.layout = QFormLayout()
-        self.setLayout(self.layout)
-
+        self.list_of_workers = get_users()
+        self.ui.worker_combobox.addItems(self.list_of_workers)
         self.ui.add_worker_button.clicked.connect(self.add_worker)
-
+        self.ui.remove_worker_button.clicked.connect(self.remove_worker)
+        self.ui.buttonBox.accepted.connect(self.create_task)
+    
     def add_worker(self):
         new_combobox = QComboBox()
-        self.layout.addWidget(new_combobox)
+        new_combobox.addItems(self.list_of_workers)
+        row_count = self.ui.gridLayout.rowCount()
+        self.ui.gridLayout.addWidget(new_combobox, row_count, 0, 1, 1)
+        self.workers.append(new_combobox)
 
+    
+    def remove_worker(self):
+        if len(self.workers) > 0:
+            widget = self.workers[-1]
+            widget.deleteLater()
+            self.workers.pop()
+        else:
+            QMessageBox.warning(self, "Ошибка", "Необходимо наличие хотя бы одного исполнителя")
+
+    def create_task(self):
+        task_text = self.ui.text_task.toPlainText()
+        workers = [self.ui.worker_combobox.currentText()]
+        for combobox in self.workers:
+            workers.append(combobox.currentText())
+        
+        if not task_text:
+            QMessageBox.warning(self, "Ошибка", "Наименование задачи не может быть пустым")
+        
+        workers_string = ' | '.join(workers)
+        add_task(task_text, workers_string)
+        
+
+
+            
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

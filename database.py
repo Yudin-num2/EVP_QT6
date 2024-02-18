@@ -12,6 +12,7 @@ PASSWORD = config.get('Postgre', 'password')
 DATABASE = config.get('Postgre', 'database')
 
 def authorization(login: str, passw: str) -> bool:
+
     try:
         with psycopg.connect(host="127.0.0.1",
                               port=5432,
@@ -19,9 +20,61 @@ def authorization(login: str, passw: str) -> bool:
                               password=PASSWORD,
                               dbname=DATABASE) as conn:
             with conn.cursor() as cur:
-                cur.execute("""SELECT * FROM users_authorization WHERE login = %s AND passw = %s""", (login, passw))
+                cur.execute("SELECT * FROM users_authorization WHERE login = %s AND passw = %s", (login, passw))
                 return True if cur.fetchall() else False
 
     except Exception as exc:
         logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')
 
+
+def get_users():
+    try:
+        with psycopg.connect(host="127.0.0.1",
+                              port=5432,
+                              user=USERNAME,
+                              password=PASSWORD,
+                              dbname=DATABASE) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT (surname, name) FROM users_authorization")
+                users = cur.fetchall()
+                workers_list = []
+                for user in users:
+                    surname_name = list(user[0])
+                    workers_list.append(' '.join(surname_name))
+                
+                return workers_list
+
+    except Exception as exc:
+        logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')
+
+def select_tasks() -> list:
+
+    try:
+        with psycopg.connect(host="127.0.0.1",
+                              port=5432,
+                              user=USERNAME,
+                              password=PASSWORD,
+                              dbname=DATABASE) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT task, workers, status FROM current_tasks")
+                rows = cur.fetchall()
+                return rows
+
+    except Exception as exc:
+        logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')
+
+
+def add_task(task: str, workers: str):
+
+    try:
+        with psycopg.connect(host="127.0.0.1",
+                              port=5432,
+                              user=USERNAME,
+                              password=PASSWORD,
+                              dbname=DATABASE) as conn:
+            with conn.cursor() as cur:
+                cur.execute("INSERT INTO current_tasks(task, workers) VALUES(%s, %s)", (task, workers))
+                print(cur.execute)
+
+    except Exception as exc:
+        logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')
