@@ -64,7 +64,7 @@ def select_tasks() -> list:
         logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')
 
 
-def add_task(task: str, workers: str):
+def add_task(task: str, workers: str, tech_card: str = None):
 
     try:
         with psycopg.connect(host="127.0.0.1",
@@ -73,8 +73,39 @@ def add_task(task: str, workers: str):
                               password=PASSWORD,
                               dbname=DATABASE) as conn:
             with conn.cursor() as cur:
-                cur.execute("INSERT INTO current_tasks(task, workers) VALUES(%s, %s)", (task, workers))
-                print(cur.execute)
+                query = cur.execute("INSERT INTO current_tasks(task, workers, tech_card) VALUES(%s, %s, %s)", (task, workers, tech_card))
+                print(query)
+
+    except Exception as exc:
+        logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')
+
+def select_technological_cards() -> list:
+
+    try:
+        with psycopg.connect(host="127.0.0.1",
+                              port=5432,
+                              user=USERNAME,
+                              password=PASSWORD,
+                              dbname=DATABASE) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT name FROM technological_cards")
+                rows = cur.fetchall()
+                return rows
+
+    except Exception as exc:
+        logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')
+
+def select_machines_name():
+    try:
+        with psycopg.connect(host="127.0.0.1",
+                              port=5432,
+                              user=USERNAME,
+                              password=PASSWORD,
+                              dbname=DATABASE) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT name FROM machines")
+                rows = cur.fetchall()
+                return rows
 
     except Exception as exc:
         logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')

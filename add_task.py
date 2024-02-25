@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'add_task_dialog.ui'
+# Form implementation generated from reading ui file 'ui_files/add_task_dialog.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.2
 #
@@ -12,11 +12,14 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(528, 538)
+        Dialog.resize(531, 542)
         icon = QtGui.QIcon.fromTheme("address-book-new")
         Dialog.setWindowIcon(icon)
         self.gridLayout = QtWidgets.QGridLayout(Dialog)
         self.gridLayout.setObjectName("gridLayout")
+        self.workers_label = QtWidgets.QLabel(parent=Dialog)
+        self.workers_label.setObjectName("workers_label")
+        self.gridLayout.addWidget(self.workers_label, 3, 0, 1, 1)
         self.worker_combobox = QtWidgets.QComboBox(parent=Dialog)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
@@ -27,12 +30,6 @@ class Ui_Dialog(object):
         self.worker_combobox.setMaxVisibleItems(7)
         self.worker_combobox.setObjectName("worker_combobox")
         self.gridLayout.addWidget(self.worker_combobox, 4, 0, 1, 1)
-        self.workers_label = QtWidgets.QLabel(parent=Dialog)
-        self.workers_label.setObjectName("workers_label")
-        self.gridLayout.addWidget(self.workers_label, 3, 0, 1, 1)
-        self.name_of_task = QtWidgets.QLabel(parent=Dialog)
-        self.name_of_task.setObjectName("name_of_task")
-        self.gridLayout.addWidget(self.name_of_task, 0, 0, 1, 1)
         self.text_task = QtWidgets.QPlainTextEdit(parent=Dialog)
         self.text_task.setObjectName("text_task")
         self.gridLayout.addWidget(self.text_task, 1, 0, 1, 3)
@@ -42,14 +39,6 @@ class Ui_Dialog(object):
         self.buttonBox.setCenterButtons(False)
         self.buttonBox.setObjectName("buttonBox")
         self.gridLayout.addWidget(self.buttonBox, 0, 2, 1, 1)
-        self.remove_worker_button = QtWidgets.QPushButton(parent=Dialog)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.remove_worker_button.sizePolicy().hasHeightForWidth())
-        self.remove_worker_button.setSizePolicy(sizePolicy)
-        self.remove_worker_button.setObjectName("remove_worker_button")
-        self.gridLayout.addWidget(self.remove_worker_button, 4, 2, 1, 1)
         self.add_worker_button = QtWidgets.QPushButton(parent=Dialog)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -58,6 +47,17 @@ class Ui_Dialog(object):
         self.add_worker_button.setSizePolicy(sizePolicy)
         self.add_worker_button.setObjectName("add_worker_button")
         self.gridLayout.addWidget(self.add_worker_button, 4, 1, 1, 1)
+        self.remove_worker_button = QtWidgets.QPushButton(parent=Dialog)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Fixed, QtWidgets.QSizePolicy.Policy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.remove_worker_button.sizePolicy().hasHeightForWidth())
+        self.remove_worker_button.setSizePolicy(sizePolicy)
+        self.remove_worker_button.setObjectName("remove_worker_button")
+        self.gridLayout.addWidget(self.remove_worker_button, 4, 2, 1, 1)
+        self.checkBox = QtWidgets.QCheckBox(parent=Dialog)
+        self.checkBox.setObjectName("checkBox")
+        self.gridLayout.addWidget(self.checkBox, 5, 0, 1, 1)
 
         self.retranslateUi(Dialog)
         self.buttonBox.accepted.connect(Dialog.accept) # type: ignore
@@ -68,6 +68,7 @@ class Ui_Dialog(object):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Добавление задачи"))
         self.workers_label.setText(_translate("Dialog", "Исполнители"))
-        self.name_of_task.setText(_translate("Dialog", "Наименование"))
-        self.remove_worker_button.setText(_translate("Dialog", "-"))
+        self.text_task.setPlaceholderText(_translate("Dialog", "Наименование задачи"))
         self.add_worker_button.setText(_translate("Dialog", "+"))
+        self.remove_worker_button.setText(_translate("Dialog", "-"))
+        self.checkBox.setText(_translate("Dialog", "Регламентное мероприятие"))

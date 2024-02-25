@@ -45,12 +45,9 @@
     </widget>
    </item>
    <item row="1" column="0" colspan="3">
-    <widget class="QPlainTextEdit" name="text_task"/>
-   </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="name_of_task">
-     <property name="text">
-      <string>Наименование</string>
+    <widget class="QPlainTextEdit" name="text_task">
+     <property name="placeholderText">
+      <string>Наименование задачи</string>
      </property>
     </widget>
    </item>
