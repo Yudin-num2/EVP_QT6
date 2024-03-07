@@ -1,11 +1,12 @@
 import sys
+import json
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QWidget, QMessageBox, QMainWindow, QTableWidgetItem, QHeaderView, QDialog, QComboBox, QLabel
 from login_form import Ui_login_form
 from main_file import *
 from add_task import Ui_Dialog
 from operations_table_widget import Ui_operations_table_widget
-from complete_routine_event import Ui_elimination_of_routine_event
+from complete_task import Ui_elimination_task
 from database import *
 
 
@@ -38,6 +39,7 @@ class Login(QWidget):
         else:
             QMessageBox.warning(self, "Ошибка авторизации", "Неверный логин или пароль")
 
+
 class MainPage(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -48,45 +50,48 @@ class MainPage(QMainWindow):
         self.ui.main_tasks_list.setHorizontalHeaderLabels(["Задача", "Исполнители", "Статус"])
         self.ui.main_tasks_list.horizontalHeaderItem(0).setFlags(Qt.ItemFlag.ItemIsSelectable)
 
-        for index in range(0, 3):
+        for index in range(0, self.ui.main_tasks_list.columnCount()):
             self.ui.main_tasks_list.horizontalHeader().setSectionResizeMode(index, QHeaderView.ResizeMode.ResizeToContents)
         
         self.ui.main_tasks_list.horizontalHeader().setSectionResizeMode(index, QHeaderView.ResizeMode.Stretch)
         self.update_task_list()
+        
         self.ui.main_add_task.clicked.connect(self.show_add_task_dialog)
         self.ui.update_tasks_list.clicked.connect(self.update_task_list)
         self.ui.main_tasks_list.itemSelectionChanged.connect(self.open_task)
-        self.ui.main_tasks_list
 
-    def show_add_task_dialog(self):
-        
-        dialog = AddTaskDialog()
-        dialog.exec()
+
+    def show_add_task_dialog(self): return add_task_dialog.show()
 
 
     def update_task_list(self):
         self.ui.main_tasks_list.setRowCount(0)
         row = 0
-
-        for task in select_tasks():
-            # workers = task[1].split('| ')
+        tasks = select_tasks()
+        for task in tasks:
             self.ui.main_tasks_list.insertRow(row)
-
-            for index in range(0, 3):
-                self.ui.main_tasks_list.setItem(row, index, QTableWidgetItem(task[index]))
-
+            self.ui.main_tasks_list.setItem(row, 0, QTableWidgetItem(task[0]))
+            workers = task[1].replace(' | ', ', ')
+            self.ui.main_tasks_list.setItem(row, 1, QTableWidgetItem(workers))
+            self.ui.main_tasks_list.setItem(row, 2, QTableWidgetItem(task[2]))
             item = self.ui.main_tasks_list.item(row, 2)
             item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-
+            item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
+            item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsSelectable)  
             row += 1
-
     
     def open_task(self):
         selected_items = self.ui.main_tasks_list.selectedItems()
         if selected_items:
             item = selected_items[0]
             if item.column() == 0:
-                complete_servicing.show()
+                text = item.text()
+                if 'ТО' in text:   
+                    complete_servicing.show()
+                else:
+                    complete_task.ui.name_of_task.setText(text)
+                    complete_task.show()
+
 
 
 class AddTaskDialog(QDialog):
@@ -102,15 +107,16 @@ class AddTaskDialog(QDialog):
         self.ui.remove_worker_button.clicked.connect(self.remove_worker)
         self.ui.buttonBox.accepted.connect(self.create_task)
         self.ui.checkBox.stateChanged.connect(self.on_checkbox_state_changed)
+        #TODO Сделай self.rowcount = и меняй каждый раз, когда добавляешь или удаляешь виджет
 
 
     def add_worker(self):
         new_combobox = QComboBox()
         new_combobox.addItems(self.list_of_workers)
         row_count = self.ui.gridLayout.rowCount()
-        self.ui.gridLayout.addWidget(new_combobox, row_count, 0, 1, 1)
+        self.ui.gridLayout.addWidget(new_combobox, row_count, 0)
         self._workers.append(new_combobox)
-
+        
     
     def remove_worker(self):
         if len(self._workers) > 0:
@@ -119,6 +125,7 @@ class AddTaskDialog(QDialog):
             self._workers.pop()
         else:
             QMessageBox.warning(self, "Ошибка", "Необходимо наличие хотя бы одного исполнителя")
+
 
 
     def create_task(self):
@@ -174,12 +181,32 @@ class AddTaskDialog(QDialog):
                 self.workers_combobox = None
 
         
-class RoutineEvent(QWidget):
+class CompleteTask(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.ui = Ui_elimination_of_routine_event()
+        self.ui = Ui_elimination_task()
         self.ui.setupUi(self)
+        self.indicators_comboboxes = []
+        self.all_indicators = select_indicators()
+        self.ui.plus_indicator_combobox.clicked.connect(self.add_indicator)
+        self.ui.minus_indicator_combobox.clicked.connect(self.remove_indicator)
+        
+
+    def add_indicator(self):
+        new_combobox = QComboBox()
+        new_combobox.addItems(self.all_indicators)
+        row_count = self.ui.gridLayout.rowCount()
+        self.ui.gridLayout.addWidget(new_combobox, row_count, 0)
+        self.indicators_comboboxes.append(new_combobox)
+
+    def remove_indicator(self):
+        if len(self.indicators_comboboxes) > 0:
+            widget = self.indicators_comboboxes[-1]
+            widget.deleteLater()
+            self.indicators_comboboxes.pop()
+        else:
+            QMessageBox.warning(self, "Ошибка", "Необходимо наличие хотя бы одного исполнителя")
 
 
 class CompleteServicing(QWidget):
@@ -189,10 +216,15 @@ class CompleteServicing(QWidget):
         self.ui = Ui_operations_table_widget()
         self.ui.setupUi(self)
 
+        for index in range(self.ui.operation_table.columnCount()):
+            self.ui.operation_table.horizontalHeader().setSectionResizeMode(index, QHeaderView.ResizeMode.ResizeToContents)
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     login_window = Login()
     main_window = MainPage()
     add_task_dialog = AddTaskDialog()
     complete_servicing = CompleteServicing()
+    complete_task = CompleteTask()
     sys.exit(app.exec())

@@ -88,12 +88,13 @@ def select_technological_cards() -> list:
                               password=PASSWORD,
                               dbname=DATABASE) as conn:
             with conn.cursor() as cur:
-                cur.execute("SELECT name FROM technological_cards")
+                cur.execute("SELECT name,operations FROM technological_cards")
                 rows = cur.fetchall()
                 return rows
 
     except Exception as exc:
         logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')
+
 
 def select_machines_name():
     try:
@@ -106,6 +107,27 @@ def select_machines_name():
                 cur.execute("SELECT name FROM machines")
                 rows = cur.fetchall()
                 return rows
+
+    except Exception as exc:
+        logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')
+
+
+def select_indicators():
+    try:
+        with psycopg.connect(host="127.0.0.1",
+                              port=5432,
+                              user=USERNAME,
+                              password=PASSWORD,
+                              dbname=DATABASE) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT name FROM indicators")
+                indicators = cur.fetchall()
+                indicators_list = []
+                for indicator in indicators:
+                    ind = list(indicator[0])
+                    indicators_list.append(' '.join(ind))
+                
+                return indicators_list
 
     except Exception as exc:
         logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')

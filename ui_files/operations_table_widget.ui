@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>539</width>
+    <width>445</width>
     <height>429</height>
    </rect>
   </property>
@@ -14,7 +14,8 @@
    <string>Выполнение ТО</string>
   </property>
   <property name="windowIcon">
-   <iconset theme="applications-engineering"/>
+   <iconset theme="applications-engineering">
+    <normaloff>.</normaloff>.</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
@@ -30,17 +31,17 @@
      </attribute>
      <column>
       <property name="text">
-       <string>Новый столбец</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
        <string>Наименование</string>
       </property>
      </column>
      <column>
       <property name="text">
        <string>Показатель</string>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Значение</string>
       </property>
      </column>
      <column>

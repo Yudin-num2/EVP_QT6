@@ -1,4 +1,4 @@
-# Form implementation generated from reading ui file 'main_page.ui'
+# Form implementation generated from reading ui file 'ui_files/main_page.ui'
 #
 # Created by: PyQt6 UI code generator 6.4.2
 #
@@ -40,19 +40,6 @@ class Ui_MainWindow(object):
         self.main_add_task.setFont(font)
         self.main_add_task.setObjectName("main_add_task")
         self.verticalLayout.addWidget(self.main_add_task)
-        self.main_remove_task = QtWidgets.QPushButton(parent=self.centralwidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.main_remove_task.sizePolicy().hasHeightForWidth())
-        self.main_remove_task.setSizePolicy(sizePolicy)
-        font = QtGui.QFont()
-        font.setPointSize(16)
-        font.setBold(True)
-        font.setItalic(True)
-        self.main_remove_task.setFont(font)
-        self.main_remove_task.setObjectName("main_remove_task")
-        self.verticalLayout.addWidget(self.main_remove_task)
         self.gridLayout_2.addLayout(self.verticalLayout, 1, 1, 1, 1)
         self.main_current_tasks_label = QtWidgets.QLabel(parent=self.centralwidget)
         font = QtGui.QFont()
@@ -68,7 +55,7 @@ class Ui_MainWindow(object):
         self.main_tasks_scroll_area.setWidgetResizable(True)
         self.main_tasks_scroll_area.setObjectName("main_tasks_scroll_area")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 828, 680))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 840, 680))
         self.scrollAreaWidgetContents.setFocusPolicy(QtCore.Qt.FocusPolicy.TabFocus)
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.gridLayout = QtWidgets.QGridLayout(self.scrollAreaWidgetContents)
@@ -101,11 +88,13 @@ class Ui_MainWindow(object):
         self.main_tasks_scroll_area.setWidget(self.scrollAreaWidgetContents)
         self.gridLayout_2.addWidget(self.main_tasks_scroll_area, 1, 0, 1, 1)
         self.update_tasks_list = QtWidgets.QPushButton(parent=self.centralwidget)
+        self.update_tasks_list.setAutoFillBackground(False)
         self.update_tasks_list.setText("")
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("Images/update.png"), QtGui.QIcon.Mode.Normal, QtGui.QIcon.State.Off)
         self.update_tasks_list.setIcon(icon)
         self.update_tasks_list.setIconSize(QtCore.QSize(50, 50))
+        self.update_tasks_list.setCheckable(False)
         self.update_tasks_list.setObjectName("update_tasks_list")
         self.gridLayout_2.addWidget(self.update_tasks_list, 0, 1, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
@@ -158,7 +147,6 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Главная страница"))
         self.main_add_task.setText(_translate("MainWindow", "Добавить"))
-        self.main_remove_task.setText(_translate("MainWindow", "Устранить"))
         self.main_current_tasks_label.setText(_translate("MainWindow", "Текущие задачи"))
         self.menu.setTitle(_translate("MainWindow", "Гнёзда"))
         self.menu_2.setTitle(_translate("MainWindow", "Отчёты"))

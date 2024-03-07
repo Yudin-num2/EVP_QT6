@@ -50,26 +50,6 @@
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QPushButton" name="main_remove_task">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>16</pointsize>
-          <italic>true</italic>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Устранить</string>
-        </property>
-       </widget>
-      </item>
      </layout>
     </item>
     <item row="0" column="0">
@@ -102,7 +82,7 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>828</width>
+         <width>840</width>
          <height>680</height>
         </rect>
        </property>
@@ -172,18 +152,24 @@
     </item>
     <item row="0" column="1">
      <widget class="QPushButton" name="update_tasks_list">
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
       <property name="text">
        <string/>
       </property>
       <property name="icon">
        <iconset>
-        <normaloff>../../.designer/backup/Images/update.png</normaloff>../../.designer/backup/Images/update.png</iconset>
+        <normaloff>../Images/update.png</normaloff>../Images/update.png</iconset>
       </property>
       <property name="iconSize">
        <size>
         <width>50</width>
         <height>50</height>
        </size>
+      </property>
+      <property name="checkable">
+       <bool>false</bool>
       </property>
      </widget>
     </item>
