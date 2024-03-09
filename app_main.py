@@ -1,7 +1,9 @@
 import sys
 import json
-from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QApplication, QWidget, QMessageBox, QMainWindow, QTableWidgetItem, QHeaderView, QDialog, QComboBox, QLabel
+from PyQt6.QtGui import QFont, QPixmap
+from PyQt6.QtCore import Qt, QFileInfo
+from PyQt6.QtWidgets import (QApplication, QWidget, QMessageBox, QMainWindow, QTableWidgetItem,
+QHeaderView, QDialog, QComboBox, QLabel, QLineEdit, QFileDialog)
 from login_form import Ui_login_form
 from main_file import *
 from add_task import Ui_Dialog
@@ -106,15 +108,20 @@ class AddTaskDialog(QDialog):
         self.ui.add_worker_button.clicked.connect(self.add_worker)
         self.ui.remove_worker_button.clicked.connect(self.remove_worker)
         self.ui.buttonBox.accepted.connect(self.create_task)
-        self.ui.checkBox.stateChanged.connect(self.on_checkbox_state_changed)
-        #TODO Сделай self.rowcount = и меняй каждый раз, когда добавляешь или удаляешь виджет
+        self.ui.routine_checkbox.stateChanged.connect(self.on_checkbox_state_changed)
+        self.technological_cards = select_technological_cards()
+        self.count_row = self.ui.gridLayout.rowCount()
+        combobox_index = self.ui.gridLayout.indexOf(self.ui.worker_combobox)
+        self.worker_row, _, _, _ = self.ui.gridLayout.getItemPosition(combobox_index)
+        self.ui.add_photo.clicked.connect(self.attach_photo)
 
 
     def add_worker(self):
+        
         new_combobox = QComboBox()
         new_combobox.addItems(self.list_of_workers)
-        row_count = self.ui.gridLayout.rowCount()
-        self.ui.gridLayout.addWidget(new_combobox, row_count, 0)
+        self.worker_row += 1
+        self.ui.gridLayout.addWidget(new_combobox, self.worker_row, 0)
         self._workers.append(new_combobox)
         
     
@@ -122,6 +129,7 @@ class AddTaskDialog(QDialog):
         if len(self._workers) > 0:
             widget = self._workers[-1]
             widget.deleteLater()
+            self.worker_row -= 1
             self._workers.pop()
         else:
             QMessageBox.warning(self, "Ошибка", "Необходимо наличие хотя бы одного исполнителя")
@@ -129,7 +137,7 @@ class AddTaskDialog(QDialog):
 
 
     def create_task(self):
-        if not self.ui.checkBox.isChecked():
+        if not self.ui.routine_checkbox.isChecked():
             task_text = self.ui.text_task.toPlainText()
             workers = [self.ui.worker_combobox.currentText()]
             for combobox in self._workers:
@@ -153,33 +161,45 @@ class AddTaskDialog(QDialog):
         if state == 2:
             self.ui.text_task.setReadOnly(True)
             if self.workers_combobox is None:
+                checkbox_index = self.ui.gridLayout.indexOf(self.ui.routine_checkbox)
+                checkbox_row, checkbox_colomn, _, _ = self.ui.gridLayout.getItemPosition(checkbox_index)
                 self.workers_combobox = QComboBox()
-                row_position = self.ui.gridLayout.rowCount()
-                self.ui.gridLayout.addWidget(self.workers_combobox, row_position, 0)
-                technological_cards = select_technological_cards()
-                cards = ', '.join([item[0] for item in technological_cards])                    
-                self.workers_combobox.addItems(cards.split(', '))
+                print(self.ui.gridLayout.columnCount())
 
-            self.telerobot_label = QLabel()
+                self.ui.gridLayout.addWidget(self.workers_combobox,
+                                             checkbox_row + 1,
+                                             checkbox_colomn,
+                                             QtCore.Qt.AlignmentFlag.AlignHCenter)
+                print(self.ui.gridLayout.columnCount())
+                cards = ' '.join([item[0] for item in self.technological_cards])                    
+                self.workers_combobox.addItems(cards.split(' '))
             self.telerobot_combobox = QComboBox()
-            self.telerobot_label.setText('Комплекс')
-            self.ui.gridLayout.addWidget(self.telerobot_label, row_position + 1, 0)
-            self.ui.gridLayout.addWidget(self.telerobot_combobox, row_position + 2, 0)
+            self.ui.gridLayout.addWidget(self.telerobot_combobox,
+                                         checkbox_row + 2,
+                                         checkbox_colomn,
+                                         QtCore.Qt.AlignmentFlag.AlignHCenter)
+            print(self.ui.gridLayout.columnCount())
             machines_name = select_machines_name()
             names_of_machines = ', '.join([name[0] for name in machines_name])
             self.telerobot_combobox.addItems(names_of_machines.split(', '))
-
         else:
             self.ui.text_task.setReadOnly(False)
             self.ui.gridLayout.removeWidget(self.telerobot_combobox)
             self.telerobot_combobox.deleteLater()
-            self.telerobot_label.deleteLater()
-            self.ui.gridLayout.removeWidget(self.telerobot_label)
             if self.workers_combobox is not None:
                 self.ui.gridLayout.removeWidget(self.workers_combobox)
                 self.workers_combobox.deleteLater()
                 self.workers_combobox = None
 
+    def attach_photo(self):
+        file_dialog = QFileDialog()
+        file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
+        file_dialog.setNameFilter("Images (*.png *.jpg *.jpeg)")
+
+        if file_dialog.exec() == QFileDialog.DialogCode.Accepted:
+            selected_file = file_dialog.selectedFiles()[0]
+            file_info = QFileInfo(selected_file)
+            self.ui.photo_name.setText(file_info.fileName())
         
 class CompleteTask(QWidget):
     def __init__(self):
@@ -187,7 +207,7 @@ class CompleteTask(QWidget):
 
         self.ui = Ui_elimination_task()
         self.ui.setupUi(self)
-        self.indicators_comboboxes = []
+        self.indicators = []
         self.all_indicators = select_indicators()
         self.ui.plus_indicator_combobox.clicked.connect(self.add_indicator)
         self.ui.minus_indicator_combobox.clicked.connect(self.remove_indicator)
@@ -195,18 +215,23 @@ class CompleteTask(QWidget):
 
     def add_indicator(self):
         new_combobox = QComboBox()
+        new_combobox.setMaximumWidth(350)
         new_combobox.addItems(self.all_indicators)
+        new_combobox.setMaximumHeight(30)
+        line_edit = QLineEdit()
         row_count = self.ui.gridLayout.rowCount()
         self.ui.gridLayout.addWidget(new_combobox, row_count, 0)
-        self.indicators_comboboxes.append(new_combobox)
+        self.ui.gridLayout.addWidget(line_edit, row_count, 1, 1, 2)
+        self.indicators.append([new_combobox, line_edit])
 
     def remove_indicator(self):
-        if len(self.indicators_comboboxes) > 0:
-            widget = self.indicators_comboboxes[-1]
-            widget.deleteLater()
-            self.indicators_comboboxes.pop()
+        if len(self.indicators) > 0:
+            widgets = self.indicators[-1]
+            for widget in widgets:
+                widget.deleteLater()
+            self.indicators.pop()
         else:
-            QMessageBox.warning(self, "Ошибка", "Необходимо наличие хотя бы одного исполнителя")
+            QMessageBox.warning(self, "Ошибка", "Не указано ни одного контролируемого показателя для удаления")
 
 
 class CompleteServicing(QWidget):

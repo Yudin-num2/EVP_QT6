@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>531</width>
-    <height>542</height>
+    <width>495</width>
+    <height>505</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,17 +15,46 @@
   </property>
   <property name="windowIcon">
    <iconset theme="address-book-new">
-    <normaloff>.</normaloff>.</iconset>
+    <normaloff>../../../.designer/backup</normaloff>../../../.designer/backup</iconset>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="3" column="0">
-    <widget class="QLabel" name="workers_label">
+   <item row="4" column="4">
+    <widget class="QPushButton" name="remove_worker_button">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="text">
-      <string>Исполнители</string>
+      <string>-</string>
      </property>
     </widget>
    </item>
-   <item row="4" column="0">
+   <item row="0" column="5">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+     <property name="centerButtons">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="6">
+    <widget class="QPlainTextEdit" name="text_task">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;При нажатии флажка &amp;quot;ТО&amp;quot;, данное поле закрыто для записи. Данные запишутся автоматически&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="placeholderText">
+      <string>Наименование задачи</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
     <widget class="QComboBox" name="worker_combobox">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
@@ -44,27 +73,20 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0" colspan="3">
-    <widget class="QPlainTextEdit" name="text_task">
-     <property name="placeholderText">
-      <string>Наименование задачи</string>
+   <item row="5" column="5" alignment="Qt::AlignHCenter">
+    <widget class="QCheckBox" name="routine_checkbox">
+     <property name="font">
+      <font>
+       <italic>true</italic>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>ТО</string>
      </property>
     </widget>
    </item>
-   <item row="0" column="2">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-     <property name="centerButtons">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="1">
+   <item row="5" column="4">
     <widget class="QPushButton" name="add_worker_button">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -77,23 +99,49 @@
      </property>
     </widget>
    </item>
-   <item row="4" column="2">
-    <widget class="QPushButton" name="remove_worker_button">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
+   <item row="4" column="0">
+    <widget class="QLabel" name="workers_label">
      <property name="text">
-      <string>-</string>
+      <string>Исполнители</string>
      </property>
     </widget>
    </item>
-   <item row="5" column="0">
-    <widget class="QCheckBox" name="checkBox">
+   <item row="0" column="4">
+    <widget class="QPushButton" name="add_photo">
+     <property name="maximumSize">
+      <size>
+       <width>32</width>
+       <height>32</height>
+      </size>
+     </property>
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Прикрепить фото&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="autoFillBackground">
+      <bool>false</bool>
+     </property>
      <property name="text">
-      <string>Регламентное мероприятие</string>
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset>
+       <normaloff>../Images/add_photo_photo_tool_chatting_social_media_icon_197276.svg</normaloff>../Images/add_photo_photo_tool_chatting_social_media_icon_197276.svg</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>32</width>
+       <height>32</height>
+      </size>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="photo_name">
+     <property name="text">
+      <string/>
+     </property>
+     <property name="scaledContents">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
