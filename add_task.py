@@ -87,7 +87,7 @@ class Ui_Dialog(object):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Добавление задачи"))
         self.remove_worker_button.setText(_translate("Dialog", "-"))
-        self.text_task.setToolTip(_translate("Dialog", "<html><head/><body><p align=\"center\">При нажатии флажка &quot;ТО&quot;, данное поле закрыто для записи. Данные запишутся автоматически</p></body></html>"))
+        self.text_task.setToolTip(_translate("Dialog", "<html><head/><body><p align=\"center\"><br/></p></body></html>"))
         self.text_task.setPlaceholderText(_translate("Dialog", "Наименование задачи"))
         self.routine_checkbox.setText(_translate("Dialog", "ТО"))
         self.add_worker_button.setText(_translate("Dialog", "+"))

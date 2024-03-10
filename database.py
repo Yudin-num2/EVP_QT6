@@ -64,7 +64,7 @@ def select_tasks() -> list:
         logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')
 
 
-def add_task(task: str, workers: str, tech_card: str = None):
+def add_task(task: str, workers: str, tech_card: str = None, photo_name: str = None):
 
     try:
         with psycopg.connect(host="127.0.0.1",
@@ -73,7 +73,8 @@ def add_task(task: str, workers: str, tech_card: str = None):
                               password=PASSWORD,
                               dbname=DATABASE) as conn:
             with conn.cursor() as cur:
-                query = cur.execute("INSERT INTO current_tasks(task, workers, tech_card) VALUES(%s, %s, %s)", (task, workers, tech_card))
+                query = cur.execute("INSERT INTO current_tasks(task, workers, tech_card, path_to_photo) VALUES(%s, %s, %s, %s)",
+                                     (task, workers, tech_card, photo_name))
                 print(query)
 
     except Exception as exc:

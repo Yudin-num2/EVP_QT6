@@ -47,7 +47,7 @@
    <item row="2" column="0" colspan="6">
     <widget class="QPlainTextEdit" name="text_task">
      <property name="toolTip">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;При нажатии флажка &amp;quot;ТО&amp;quot;, данное поле закрыто для записи. Данные запишутся автоматически&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
      <property name="placeholderText">
       <string>Наименование задачи</string>

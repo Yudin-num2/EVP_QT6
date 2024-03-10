@@ -1,6 +1,6 @@
 import sys
 import json
-from PyQt6.QtGui import QFont, QPixmap
+from PyQt6.QtGui import QFont, QPixmap, QColor
 from PyQt6.QtCore import Qt, QFileInfo
 from PyQt6.QtWidgets import (QApplication, QWidget, QMessageBox, QMainWindow, QTableWidgetItem,
 QHeaderView, QDialog, QComboBox, QLabel, QLineEdit, QFileDialog)
@@ -9,7 +9,9 @@ from main_file import *
 from add_task import Ui_Dialog
 from operations_table_widget import Ui_operations_table_widget
 from complete_task import Ui_elimination_task
+from what_to_do import Ui_what_to_do_dialog
 from database import *
+import shutil
 
 
 class Login(QWidget):
@@ -79,22 +81,23 @@ class MainPage(QMainWindow):
             item = self.ui.main_tasks_list.item(row, 2)
             item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
-            item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsSelectable)  
+            item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsSelectable)
+            if item.text() == 'Создана':
+                item.setBackground(QColor(188, 53, 53)) # Тёмно-оранжевый с прозрачностью 0.8
             row += 1
     
     def open_task(self):
         selected_items = self.ui.main_tasks_list.selectedItems()
+        print(selected_items[0].text())
         if selected_items:
             item = selected_items[0]
-            if item.column() == 0:
-                text = item.text()
-                if 'ТО' in text:   
-                    complete_servicing.show()
-                else:
-                    complete_task.ui.name_of_task.setText(text)
-                    complete_task.show()
-
-
+            text = item.text()
+            if 'ТО' in text:   
+                complete_servicing.show()
+            else:
+                complete_task.ui.name_of_task.setText(text)
+                what_to_do.show()
+                
 
 class AddTaskDialog(QDialog):
     def __init__(self):
@@ -135,7 +138,6 @@ class AddTaskDialog(QDialog):
             QMessageBox.warning(self, "Ошибка", "Необходимо наличие хотя бы одного исполнителя")
 
 
-
     def create_task(self):
         if not self.ui.routine_checkbox.isChecked():
             task_text = self.ui.text_task.toPlainText()
@@ -147,7 +149,9 @@ class AddTaskDialog(QDialog):
                 QMessageBox.warning(self, "Ошибка", "Наименование задачи не может быть пустым")
             
             workers_string = ', '.join(workers)
-            add_task(task_text, workers_string)
+            if self.ui.photo_name:
+                photo_path = f"saved_photo_path/{self.ui.photo_name.text()}"
+            add_task(task_text, workers_string, photo_path)
         
         else:
             workers_string = ', '.join([self.ui.worker_combobox.currentText()])
@@ -160,17 +164,16 @@ class AddTaskDialog(QDialog):
     def on_checkbox_state_changed(self, state):
         if state == 2:
             self.ui.text_task.setReadOnly(True)
+            self.ui.add_photo.setEnabled(False)
+            self.ui.add_photo.setToolTip("<html><head/><body><p>При ТО нельзя прикрепить фото</p></body></html>")
             if self.workers_combobox is None:
                 checkbox_index = self.ui.gridLayout.indexOf(self.ui.routine_checkbox)
                 checkbox_row, checkbox_colomn, _, _ = self.ui.gridLayout.getItemPosition(checkbox_index)
                 self.workers_combobox = QComboBox()
-                print(self.ui.gridLayout.columnCount())
-
                 self.ui.gridLayout.addWidget(self.workers_combobox,
                                              checkbox_row + 1,
                                              checkbox_colomn,
                                              QtCore.Qt.AlignmentFlag.AlignHCenter)
-                print(self.ui.gridLayout.columnCount())
                 cards = ' '.join([item[0] for item in self.technological_cards])                    
                 self.workers_combobox.addItems(cards.split(' '))
             self.telerobot_combobox = QComboBox()
@@ -178,12 +181,13 @@ class AddTaskDialog(QDialog):
                                          checkbox_row + 2,
                                          checkbox_colomn,
                                          QtCore.Qt.AlignmentFlag.AlignHCenter)
-            print(self.ui.gridLayout.columnCount())
             machines_name = select_machines_name()
             names_of_machines = ', '.join([name[0] for name in machines_name])
             self.telerobot_combobox.addItems(names_of_machines.split(', '))
         else:
             self.ui.text_task.setReadOnly(False)
+            self.ui.add_photo.setEnabled(True)
+            self.ui.add_photo.setToolTip("<html><head/><body><p>Прикрепить фото</p></body></html>")
             self.ui.gridLayout.removeWidget(self.telerobot_combobox)
             self.telerobot_combobox.deleteLater()
             if self.workers_combobox is not None:
@@ -194,12 +198,14 @@ class AddTaskDialog(QDialog):
     def attach_photo(self):
         file_dialog = QFileDialog()
         file_dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
-        file_dialog.setNameFilter("Images (*.png *.jpg *.jpeg)")
+        file_dialog.setNameFilter("Images (*.jpg *.jpeg)")
 
         if file_dialog.exec() == QFileDialog.DialogCode.Accepted:
             selected_file = file_dialog.selectedFiles()[0]
-            file_info = QFileInfo(selected_file)
-            self.ui.photo_name.setText(file_info.fileName())
+            file_name = QFileInfo(selected_file).fileName()
+            self.ui.photo_name.setText(file_name)
+            save_path = "saved_photo_path/" + file_name
+            shutil.copy(selected_file, save_path)
         
 class CompleteTask(QWidget):
     def __init__(self):
@@ -245,6 +251,31 @@ class CompleteServicing(QWidget):
             self.ui.operation_table.horizontalHeader().setSectionResizeMode(index, QHeaderView.ResizeMode.ResizeToContents)
 
 
+class WhatToDo(QDialog):
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.ui = Ui_what_to_do_dialog()
+        self.ui.setupUi(self)
+        
+        self.ui.task_info_button.clicked.connect(self.task_info_handler)
+        self.ui.get_to_work_button.clicked.connect(self.get_to_work_handler)
+        self.ui.remove_button.clicked.connect(self.remove_handler)
+        
+
+    def get_to_work_handler(self):
+        pass
+
+
+    def task_info_handler(self):
+        pass
+
+    def remove_handler(self):
+        pass
+
+
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     login_window = Login()
@@ -252,4 +283,6 @@ if __name__ == '__main__':
     add_task_dialog = AddTaskDialog()
     complete_servicing = CompleteServicing()
     complete_task = CompleteTask()
+    what_to_do = WhatToDo()
     sys.exit(app.exec())
+
