@@ -31,6 +31,32 @@
        <enum>QLayout::SetFixedSize</enum>
       </property>
       <item>
+       <widget class="QPushButton" name="update_tasks_list">
+        <property name="autoFillBackground">
+         <bool>false</bool>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">border-radius: 25%;</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>../Images/update.png</normaloff>../Images/update.png</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>50</width>
+          <height>50</height>
+         </size>
+        </property>
+        <property name="checkable">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="main_add_task">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -83,7 +109,7 @@
          <x>0</x>
          <y>0</y>
          <width>840</width>
-         <height>680</height>
+         <height>700</height>
         </rect>
        </property>
        <property name="focusPolicy">
@@ -124,7 +150,7 @@
            <enum>Qt::DashLine</enum>
           </property>
           <property name="columnCount">
-           <number>3</number>
+           <number>5</number>
           </property>
           <attribute name="horizontalHeaderVisible">
            <bool>true</bool>
@@ -144,33 +170,12 @@
           <column/>
           <column/>
           <column/>
+          <column/>
+          <column/>
          </widget>
         </item>
        </layout>
       </widget>
-     </widget>
-    </item>
-    <item row="0" column="1">
-     <widget class="QPushButton" name="update_tasks_list">
-      <property name="autoFillBackground">
-       <bool>false</bool>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-      <property name="icon">
-       <iconset>
-        <normaloff>../Images/update.png</normaloff>../Images/update.png</iconset>
-      </property>
-      <property name="iconSize">
-       <size>
-        <width>50</width>
-        <height>50</height>
-       </size>
-      </property>
-      <property name="checkable">
-       <bool>false</bool>
-      </property>
      </widget>
     </item>
    </layout>
