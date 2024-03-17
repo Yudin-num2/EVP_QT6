@@ -28,6 +28,7 @@ class Login(QWidget):
         self.ui.btn_login.clicked.connect(self.check_authorization)
         self.show()
         self.main = None
+        self.result = None
 
     def check_authorization(self):
         login = self.ui.login_text.text()
@@ -41,10 +42,9 @@ class Login(QWidget):
             QMessageBox.warning(self, "Ошибка авторизации", "Поле 'пароль' не может быть пустым")
             return
         
-        result = authorization(login=login, passw=passw)
-        print(result)
-        if result:
-            self.main = MainPage(result)
+        self.result = authorization(login=login, passw=passw)
+        if self.result:
+            self.main = MainPage()
             self.main.show()
             self.close()
         else:
@@ -52,21 +52,23 @@ class Login(QWidget):
 
 
 class MainPage(QMainWindow):
-    def __init__(self, user_data):
+    def __init__(self):
         super().__init__()
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.user_data = user_data
+        self.user_data = login_window.result
         self.username = ' '.join([self.user_data[0][3], self.user_data[0][4]])
         
         self.ui.main_tasks_list.setHorizontalHeaderLabels(["Задача", "Исполнители", "Автор", "Время создания", "Статус"])
-        self.ui.main_tasks_list.horizontalHeaderItem(0).setFlags(Qt.ItemFlag.ItemIsSelectable)
-
-        for index in range(0, self.ui.main_tasks_list.columnCount()):
-            self.ui.main_tasks_list.horizontalHeader().setSectionResizeMode(index, QHeaderView.ResizeMode.ResizeToContents)
+        # self.ui.main_tasks_list.horizontalHeaderItem(0).setFlags(Qt.ItemFlag.ItemIsSelectable)
         
-        self.ui.main_tasks_list.horizontalHeader().setSectionResizeMode(index, QHeaderView.ResizeMode.Stretch)
+        for index in range(0, self.ui.main_tasks_list.columnCount()):
+            if index != 1:
+                self.ui.main_tasks_list.horizontalHeader().setSectionResizeMode(index, QHeaderView.ResizeMode.ResizeToContents)
+        
+        self.ui.main_tasks_list.setColumnWidth(1, 200)
+
         self.update_task_list()
         
         self.ui.main_add_task.clicked.connect(lambda: add_task_dialog.show())
@@ -81,20 +83,29 @@ class MainPage(QMainWindow):
         for task in tasks:
             _, task_name, workers_name, status, tech_card, path_to_photo, timestamp, author = task
             self.ui.main_tasks_list.insertRow(row)
-            self.ui.main_tasks_list.setItem(row, 0, QTableWidgetItem(task_name))
-            self.ui.main_tasks_list.setItem(row, 1, QTableWidgetItem(workers_name))
-            self.ui.main_tasks_list.setItem(row, 2, QTableWidgetItem(author))
-            self.ui.main_tasks_list.setItem(row, 3, QTableWidgetItem(timestamp.strftime("%d:%m:%Y %H:%M")))
-            self.ui.main_tasks_list.setItem(row, 4, QTableWidgetItem(status))
-            item = self.ui.main_tasks_list.item(row, 4)
-            item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-            item.setFlags(item.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
-            item.setFlags(item.flags() | QtCore.Qt.ItemFlag.ItemIsSelectable)
-            if item.text() == 'Создана':
-                item.setBackground(QColor(188, 53, 53)) # Тёмно-оранжевый с прозрачностью 0.8
-            elif item.text() == 'В работе':
-                item.setBackground(QColor(255, 255, 51)) # Желтый с прозрачностью 0.8
+
+            for col, text in enumerate([task_name, workers_name, author, timestamp.strftime("%d.%m.%Y %H:%M"), status]):
+                item = QTableWidgetItem(text)
+                item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
+                item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+                self.ui.main_tasks_list.setItem(row, col, item)
+
+                if col == 1:
+                    item1 = self.ui.main_tasks_list.item(row, col)
+                    item1.setFlags(item1.flags() | Qt.ItemFlag.ItemIsSelectable)
+                    item1.setFlags(item1.flags() | Qt.ItemFlag.ItemIsEnabled)
+                    item1.setFlags(item1.flags() | Qt.ItemFlag.ItemIsAutoTristate)
+
+                if text == 'Создана':
+                    item.setBackground(QColor(188, 53, 53)) # Тёмно-оранжевый с прозрачностью 0.8
+                elif text == 'В работе':
+                    item.setBackground(QColor(255, 255, 51)) # Желтый с прозрачностью 0.8
+
             row += 1
+
+        self.ui.main_tasks_list.resizeRowsToContents()
+
+
     
     def open_task(self):
         selected_indexes = self.ui.main_tasks_list.selectedIndexes()
@@ -284,12 +295,21 @@ class WhatToDo(QDialog):
         self.ui = Ui_what_to_do_dialog()
         self.ui.setupUi(self)
         self.task = task
+        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
+        font = QtGui.QFont()
+        font.setPointSize(20)
+        font.setBold(True)
+        font.setItalic(True)
         if self.task[-1] == 'Создана':
             self.get_to_work_button = QPushButton(text='Взять в работу')
+            self.get_to_work_button.setSizePolicy(size_policy)
+            self.get_to_work_button.setFont(font)
             self.ui.gridLayout.addWidget(self.get_to_work_button)
             self.get_to_work_button.clicked.connect(self.get_to_work_handler)
         elif self.task[-1] == 'В работе':
             self.get_to_work_button = QPushButton(text='Закончить работы')
+            self.get_to_work_button.setSizePolicy(size_policy)
+            self.get_to_work_button.setFont(font)
             self.ui.gridLayout.addWidget(self.get_to_work_button)
             self.get_to_work_button.clicked.connect(self.set_complete_status)
 
@@ -298,11 +318,12 @@ class WhatToDo(QDialog):
         self.task = task
         self.task_information = None
         self.data = select_task(task[0])
-        
+        self.main_page_obj = MainPage()
 
     def get_to_work_handler(self):
+        print(f'status = В Работе, task = {self.task[0]}')
         set_new_status(status='В работе', task=self.task[0])
-        MainPage.update_task_list()
+        self.main_page_obj.update_task_list()
         self.close()
 
 
@@ -318,7 +339,7 @@ class WhatToDo(QDialog):
 
     def set_complete_status(self):
         set_new_status(status='Выполнено', task=self.task[0])
-        MainPage.update_task_list()
+        MainPage.update_task_list(self)
         self.close()
 
 

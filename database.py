@@ -157,7 +157,8 @@ def set_new_status(task, status) -> list:
                               password=PASSWORD,
                               dbname=DATABASE) as conn:
             with conn.cursor() as cur:
-                cur.execute("UPDATE current_tasks SET status = '%s WHERE task = %s", (status, task))
+                cur.execute("UPDATE current_tasks SET status = %s WHERE task = %s", (status, task))
+                conn.commit()
                 rows = cur.fetchall()
                 return rows
 
