@@ -44,6 +44,7 @@ class Login(QWidget):
         
         self.result = authorization(login=login, passw=passw)
         if self.result:
+            print(f'[AUTH_PAGE]{self.result=}')
             self.main = MainPage()
             self.main.show()
             self.close()
@@ -61,17 +62,19 @@ class MainPage(QMainWindow):
         self.username = ' '.join([self.user_data[0][3], self.user_data[0][4]])
         
         self.ui.main_tasks_list.setHorizontalHeaderLabels(["Задача", "Исполнители", "Автор", "Время создания", "Статус"])
-        # self.ui.main_tasks_list.horizontalHeaderItem(0).setFlags(Qt.ItemFlag.ItemIsSelectable)
+        self.ui.main_tasks_list.horizontalHeaderItem(0).setFlags(Qt.ItemFlag.ItemIsSelectable)
         
         for index in range(0, self.ui.main_tasks_list.columnCount()):
             if index != 1:
                 self.ui.main_tasks_list.horizontalHeader().setSectionResizeMode(index, QHeaderView.ResizeMode.ResizeToContents)
         
         self.ui.main_tasks_list.setColumnWidth(1, 200)
-
+        self.ui.main_tasks_list.setLineWidth(20)
         self.update_task_list()
+        self.add_task = AddTaskDialog()
+        print(self.add_task)
         
-        self.ui.main_add_task.clicked.connect(lambda: add_task_dialog.show())
+        self.ui.main_add_task.clicked.connect(self.add_task.show)
         self.ui.update_tasks_list.clicked.connect(self.update_task_list)
         self.ui.main_tasks_list.itemSelectionChanged.connect(self.open_task)
 
@@ -99,12 +102,12 @@ class MainPage(QMainWindow):
                 if text == 'Создана':
                     item.setBackground(QColor(188, 53, 53)) # Тёмно-оранжевый с прозрачностью 0.8
                 elif text == 'В работе':
-                    item.setBackground(QColor(255, 255, 51)) # Желтый с прозрачностью 0.8
+                    item.setBackground(QColor(215, 223, 92)) # Золотой с прозрачностью 0.8
+                elif text == 'Отменено':
+                    item.setBackground(QColor(123, 104, 238)) # MediumSlateBlue	#7B68EE
 
             row += 1
-
         self.ui.main_tasks_list.resizeRowsToContents()
-
 
     
     def open_task(self):
@@ -117,20 +120,20 @@ class MainPage(QMainWindow):
                 index = self.ui.main_tasks_list.model().index(row, column)
                 text.append(index.data(Qt.ItemDataRole.DisplayRole))
             print(text)
-            if text[-1] == 'Создана':
-                if 'ТО' in text[0]:   
-                    complete_servicing.show()
-                else:
-                    self.what_to_do_dialog = WhatToDo(text)
-                    self.what_to_do_dialog.show()
+            if 'ТО' in text[0]:
+                self.complete_servicing = CompleteServicing()   
+                self.complete_servicing.show()
+                return self.complete_servicing
             else:
-                pass #TODO надо как-то реализовать "Выполнена"
-                
+                self.what_to_do_dialog = WhatToDo(text)
+                self.what_to_do_dialog.show()
+                return self.what_to_do_dialog
+            
 
 class AddTaskDialog(QDialog):
     def __init__(self):
         super().__init__()
-        self.workers_combobox = None
+        self.tech_card_combobox = None
         self.ui = Ui_Dialog()
         self.list_of_workers = get_users()
         self.ui.setupUi(self)
@@ -173,24 +176,19 @@ class AddTaskDialog(QDialog):
             
             if not task_text:
                 QMessageBox.warning(self, "Ошибка", "Наименование задачи не может быть пустым")
-            
-            
+
             global path_to_save_image
             if self.ui.photo_name:
                 photo_path = path_to_save_image + self.ui.photo_name.text()
             else: 
                 photo_path = path_to_save_image + '404.jpg'
-            print(photo_path)
             add_task(task=task_text, workers=workers_string, photo_name=photo_path)
-            MainPage.update_task_list()
-        
         else:
             workers_string = ', '.join([self.ui.worker_combobox.currentText()])
-            tech_card = self.workers_combobox.currentText()
+            tech_card = self.tech_card_combobox.currentText()
             machine = self.telerobot_combobox.currentText()
             task = f'{tech_card} | {machine}'
             add_task(task=task, workers=workers_string, tech_card=tech_card)
-            MainPage.update_task_list()
 
     
     def on_checkbox_state_changed(self, state):
@@ -201,16 +199,16 @@ class AddTaskDialog(QDialog):
             self.ui.text_task.setToolTip(
                 "<html><head/><body><p>При ТО нельзя заполнять текст</p><p>Он будет заполнен автоматически</p></body></html>")
 
-            if self.workers_combobox is None:
+            if self.tech_card_combobox is None:
                 checkbox_index = self.ui.gridLayout.indexOf(self.ui.routine_checkbox)
                 checkbox_row, checkbox_colomn, _, _ = self.ui.gridLayout.getItemPosition(checkbox_index)
-                self.workers_combobox = QComboBox()
-                self.ui.gridLayout.addWidget(self.workers_combobox,
+                self.tech_card_combobox = QComboBox()
+                self.ui.gridLayout.addWidget(self.tech_card_combobox,
                                              checkbox_row + 1,
                                              checkbox_colomn,
                                              QtCore.Qt.AlignmentFlag.AlignHCenter)
                 cards = ' '.join([item[0] for item in self.technological_cards])                    
-                self.workers_combobox.addItems(cards.split(' '))
+                self.tech_card_combobox.addItems(cards.split(' '))
             self.telerobot_combobox = QComboBox()
             self.ui.gridLayout.addWidget(self.telerobot_combobox,
                                          checkbox_row + 2,
@@ -225,10 +223,10 @@ class AddTaskDialog(QDialog):
             self.ui.add_photo.setToolTip("<html><head/><body><p>Прикрепить фото</p></body></html>")
             self.ui.gridLayout.removeWidget(self.telerobot_combobox)
             self.telerobot_combobox.deleteLater()
-            if self.workers_combobox is not None:
-                self.ui.gridLayout.removeWidget(self.workers_combobox)
-                self.workers_combobox.deleteLater()
-                self.workers_combobox = None
+            if self.tech_card_combobox is not None:
+                self.ui.gridLayout.removeWidget(self.tech_card_combobox)
+                self.tech_card_combobox.deleteLater()
+                self.tech_card_combobox = None
 
     def attach_photo(self):
         global path_to_save_image
@@ -296,7 +294,7 @@ class WhatToDo(QDialog):
         self.ui.setupUi(self)
         self.task = task
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
-        font = QtGui.QFont()
+        font = QFont()
         font.setPointSize(20)
         font.setBold(True)
         font.setItalic(True)
@@ -318,12 +316,9 @@ class WhatToDo(QDialog):
         self.task = task
         self.task_information = None
         self.data = select_task(task[0])
-        self.main_page_obj = MainPage()
 
     def get_to_work_handler(self):
-        print(f'status = В Работе, task = {self.task[0]}')
-        set_new_status(status='В работе', task=self.task[0])
-        self.main_page_obj.update_task_list()
+        set_new_status(status='В работе', task=self.task[0], workers=self.task[1], author=self.task[2])
         self.close()
 
 
@@ -333,13 +328,11 @@ class WhatToDo(QDialog):
         self.close()
 
     def remove_handler(self):
-        set_new_status(status='Отменено', task=self.task[0])
-        MainPage.update_task_list()
+        set_new_status(status='Отменено', task=self.task[0], workers=self.task[1], author=self.task[2])
         self.close()
 
     def set_complete_status(self):
-        set_new_status(status='Выполнено', task=self.task[0])
-        MainPage.update_task_list(self)
+        set_new_status(status='Выполнено', task=self.task[0], workers=self.task[1], author=self.task[2])
         self.close()
 
 
@@ -362,7 +355,7 @@ class TaskInfoDialog(QWidget):
             new_combobox.addItems(self.users)
             self.ui.gridLayout.addWidget(new_combobox, number, 1)
         
-        font = QtGui.QFont()
+        font = QFont()
         font.setBold(True)
         font.setItalic(True)
         self.worker_label = QLabel('Исполнители')
@@ -414,7 +407,6 @@ class TaskInfoDialog(QWidget):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     login_window = Login()
-    add_task_dialog = AddTaskDialog()
     complete_servicing = CompleteServicing()
     complete_task = CompleteTask()
     sys.exit(app.exec())

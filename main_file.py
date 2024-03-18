@@ -86,7 +86,7 @@ class Ui_MainWindow(object):
         self.main_tasks_list.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         self.main_tasks_list.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.main_tasks_list.setAlternatingRowColors(True)
-        self.main_tasks_list.setGridStyle(QtCore.Qt.PenStyle.DashLine)
+        self.main_tasks_list.setGridStyle(QtCore.Qt.PenStyle.SolidLine)
         self.main_tasks_list.setColumnCount(5)
         self.main_tasks_list.setObjectName("main_tasks_list")
         self.main_tasks_list.setRowCount(0)
