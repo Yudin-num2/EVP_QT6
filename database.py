@@ -39,8 +39,8 @@ def get_users() -> list:
                 users = cur.fetchall()
                 workers_list = []
                 for user in users:
-                    surname_name = list(user[0])
-                    workers_list.append(' '.join(surname_name))
+                    surname, name = user
+                    workers_list.append(' '.join((surname, name)))
                 return workers_list
 
     except Exception as exc:
@@ -161,6 +161,22 @@ def set_new_status(task, status, workers, author) -> None:
             with conn.cursor() as cur:
                 cur.execute("""UPDATE current_tasks SET status = %s 
                             WHERE task = %s AND workers = %s AND author = %s""", (status, task, workers, author))
+                conn.commit()
+
+    except Exception as exc:
+        logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')
+
+
+def update_task_info(prev_task_name, prev_workers, task, workers) -> None:
+    try:
+        with psycopg.connect(host="127.0.0.1",
+                              port=5432,
+                              user=USERNAME,
+                              password=PASSWORD,
+                              dbname=DATABASE) as conn:
+            with conn.cursor() as cur:
+                cur.execute("""UPDATE current_tasks SET task = %s, workers = %s
+                            WHERE task = %s AND workers = %s""", (task, workers, prev_task_name, prev_workers))
                 conn.commit()
 
     except Exception as exc:

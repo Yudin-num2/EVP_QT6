@@ -4,7 +4,7 @@ from PyQt6.QtGui import QFont, QPixmap, QColor
 from PyQt6.QtCore import Qt, QFileInfo, QDateTime
 from PyQt6.QtWidgets import (QApplication, QWidget, QMessageBox, QMainWindow, QTableWidgetItem,
 QHeaderView, QDialog, QComboBox, QLabel, QLineEdit, QFileDialog, QDateTimeEdit, QDialogButtonBox,
-QScrollArea, QPushButton)
+QScrollArea, QPushButton, QCompleter)
 from login_form import Ui_login_form
 from main_file import *
 from add_task import Ui_Dialog
@@ -69,7 +69,7 @@ class MainPage(QMainWindow):
                 self.ui.main_tasks_list.horizontalHeader().setSectionResizeMode(index, QHeaderView.ResizeMode.ResizeToContents)
         
         self.ui.main_tasks_list.setColumnWidth(1, 200)
-        self.ui.main_tasks_list.setLineWidth(20)
+        self.ui.main_tasks_list.horizontalHeader().setStretchLastSection(True)
         self.update_task_list()
         self.add_task = AddTaskDialog()
         print(self.add_task)
@@ -77,6 +77,7 @@ class MainPage(QMainWindow):
         self.ui.main_add_task.clicked.connect(self.add_task.show)
         self.ui.update_tasks_list.clicked.connect(self.update_task_list)
         self.ui.main_tasks_list.itemSelectionChanged.connect(self.open_task)
+        self.ui.update_tasks_list.setToolTip('Обновить таблицу')
 
 
     def update_task_list(self):
@@ -195,9 +196,9 @@ class AddTaskDialog(QDialog):
         if state == 2:
             self.ui.text_task.setReadOnly(True)
             self.ui.add_photo.setEnabled(False)
-            self.ui.add_photo.setToolTip("<html><head/><body><p>При ТО нельзя прикрепить фото</p></body></html>")
+            self.ui.add_photo.setToolTip("При ТО нельзя прикрепить фото")
             self.ui.text_task.setToolTip(
-                "<html><head/><body><p>При ТО нельзя заполнять текст</p><p>Он будет заполнен автоматически</p></body></html>")
+                "При ТО нельзя заполнять текст\nОн будет заполнен автоматически")
 
             if self.tech_card_combobox is None:
                 checkbox_index = self.ui.gridLayout.indexOf(self.ui.routine_checkbox)
@@ -310,6 +311,8 @@ class WhatToDo(QDialog):
             self.get_to_work_button.setFont(font)
             self.ui.gridLayout.addWidget(self.get_to_work_button)
             self.get_to_work_button.clicked.connect(self.set_complete_status)
+        elif self.task[-1] == 'Отменено':
+            self.ui.remove_button.deleteLater()
 
         self.ui.task_info_button.clicked.connect(self.task_info_handler)
         self.ui.remove_button.clicked.connect(self.remove_handler)
@@ -345,23 +348,16 @@ class TaskInfoDialog(QWidget):
         self.ui.buttonBox.button(QDialogButtonBox.StandardButton.Save).clicked.connect(self.update_task)
         self.ui.buttonBox.button(QDialogButtonBox.StandardButton.Close).clicked.connect(self.close)
         self.users = get_users()
-        _, self.name, self.workers, self.status, self.tech_card, self.path_to_photo, self.timestamp,self.author = data_task
-        self.workers = self.workers.split(', ')
+        self.comboboxes = []
+        _, self.name, self.task_workers, self.status, self.tech_card, self.path_to_photo, self.timestamp,self.author = data_task
+        self.task_workers = self.task_workers.split(', ')
         self.ui.name_line_edit.setText(self.name)
-
-        for number, worker in enumerate(self.workers, start=2):
-            new_combobox = QComboBox()
-            new_combobox.setPlaceholderText(worker)
-            new_combobox.addItems(self.users)
-            self.ui.gridLayout.addWidget(new_combobox, number, 1)
-        
         font = QFont()
         font.setBold(True)
         font.setItalic(True)
         self.worker_label = QLabel('Исполнители')
         self.worker_label.setFont(font)
         self.datetime_label = QLabel('Время создания')
-        self.ui.gridLayout.addWidget(self.worker_label, 2, 0, len(self.workers), 1)
         self.datetime_label.setFont(font)
         self.ui.gridLayout.addWidget(self.datetime_label, self.ui.gridLayout.rowCount(), 0)
         self.datetime = QDateTimeEdit()
@@ -378,30 +374,56 @@ class TaskInfoDialog(QWidget):
         self.scroll_area.setWidgetResizable(True)
         self.image.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         img = QPixmap(self.path_to_photo)
-        self.image.setPixmap(img)
-        # combobox_index = self.ui.gridLayout.indexOf(self.ui.worker_combobox)
-        # self.worker_row, _, _, _ = self.ui.gridLayout.getItemPosition(combobox_index)
-        #TODO Добавить + и - иисполнителей (При формировании задачи их может не быть, тут могут назначить)
+        scaled_img = img.scaled(500,500)
+        self.image.setPixmap(scaled_img)
+        self.ui.gridLayout.addWidget(self.worker_label, self.ui.gridLayout.rowCount(), 0)
+        self.add_button = QPushButton("+")
+        self.add_button.setMaximumWidth(150)
+        self.add_button.clicked.connect(self.add_combobox)
+        self.ui.gridLayout.addWidget(self.add_button, self.ui.gridLayout.rowCount(), 1)
+        self.remove_button = QPushButton("-")
+        self.remove_button.setMaximumWidth(150)
+        self.remove_button.clicked.connect(self.remove_combobox)
+        self.ui.gridLayout.addWidget(self.remove_button, self.ui.gridLayout.rowCount() - 1, 0)
+        for number, worker in enumerate(self.task_workers, start=self.ui.gridLayout.rowCount()):
+            new_combobox = QComboBox()
+            new_combobox.setEditable(True)
+            completer = QCompleter(self.users)
+            completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+            new_combobox.setCompleter(completer)
+            new_combobox.setCurrentText(worker)
+            self.ui.gridLayout.addWidget(new_combobox, number, 1)
+            self.comboboxes.append(new_combobox)
 
+
+    def add_combobox(self):
+        new_combobox = QComboBox()
+        new_combobox.setEditable(True)
+        completer = QCompleter(self.users)
+        completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        new_combobox.setCompleter(completer)
+        new_combobox.setCurrentText("")
+        self.ui.gridLayout.addWidget(new_combobox, self.ui.gridLayout.rowCount(), 1)
+        self.comboboxes.append(new_combobox)
+
+
+    def remove_combobox(self):
+        if len(self.comboboxes) > 0:
+            widget = self.comboboxes[-1]
+            widget.deleteLater()
+            self.comboboxes.pop()
+        else:
+            QMessageBox.warning(self, 'Ошибка', 'Не найдено ни одного исполнителя для удаления')
 
 
     def update_task(self):
-        pass
+        task_name = self.ui.name_line_edit.text()
+        workers = ', '.join([worker.currentText() for worker in self.comboboxes])
+        prev_workers = ', '.join(self.task_workers)
+        update_task_info(prev_task_name=self.name, prev_workers=prev_workers, task=task_name, workers=workers)
+        self.close()
 
 
-    def add_worker(self):
-        new_combobox = QComboBox()
-        new_combobox.addItems(self.list_of_workers)
-        self.worker_row += 1
-        self.ui.gridLayout.addWidget(new_combobox, self.worker_row, 0)
-        self._workers.append(new_combobox)
-        
-    
-    def remove_worker(self):
-        widget = self._workers[-1]
-        widget.deleteLater()
-        self.worker_row -= 1
-        self._workers.pop()
 
 
 if __name__ == '__main__':
