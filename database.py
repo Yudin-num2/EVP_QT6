@@ -133,7 +133,6 @@ def select_indicators() -> list:
 
 
 def select_task(task) -> list:
-
     try:
         with psycopg.connect(host="127.0.0.1",
                               port=5432,
@@ -142,7 +141,6 @@ def select_task(task) -> list:
                               dbname=DATABASE) as conn:
             with conn.cursor() as cur:
                 cur.execute("SELECT * FROM current_tasks WHERE task = %s ORDER BY datetime DESC", (task,))
-                conn.commit()
                 rows = cur.fetchall()
                 return rows[0]
 
@@ -178,6 +176,22 @@ def update_task_info(prev_task_name, prev_workers, task, workers) -> None:
                 cur.execute("""UPDATE current_tasks SET task = %s, workers = %s
                             WHERE task = %s AND workers = %s""", (task, workers, prev_task_name, prev_workers))
                 conn.commit()
+
+    except Exception as exc:
+        logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')
+
+
+def select_technological_operations(name):
+    try:
+        with psycopg.connect(host="127.0.0.1",
+                              port=5432,
+                              user=USERNAME,
+                              password=PASSWORD,
+                              dbname=DATABASE) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT operations FROM technological_cards WHERE name = %s", (name,))
+                rows = cur.fetchall()
+                return rows
 
     except Exception as exc:
         logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')

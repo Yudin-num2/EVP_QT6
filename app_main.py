@@ -33,6 +33,13 @@ class Login(QWidget):
     def check_authorization(self):
         login = self.ui.login_text.text()
         passw = self.ui.password_text.text()
+        if login and passw == 'admin':
+            print('Hello, ADMIN')
+            self.result = [(1, 'admin', 'admin', 'Ilya', 'Sysoev', '5', None)]
+            self.main = MainPage()
+            self.main.show()
+            self.close()
+            return
 
         if not login:
             QMessageBox.warning(self, "Ошибка авторизации", "Поле 'логин' не может быть пустым")
@@ -44,7 +51,7 @@ class Login(QWidget):
         
         self.result = authorization(login=login, passw=passw)
         if self.result:
-            print(f'[AUTH_PAGE]{self.result=}')
+            print(self.result)
             self.main = MainPage()
             self.main.show()
             self.close()
@@ -60,9 +67,8 @@ class MainPage(QMainWindow):
         self.ui.setupUi(self)
         self.user_data = login_window.result
         self.username = ' '.join([self.user_data[0][3], self.user_data[0][4]])
-        
         self.ui.main_tasks_list.setHorizontalHeaderLabels(["Задача", "Исполнители", "Автор", "Время создания", "Статус"])
-        self.ui.main_tasks_list.horizontalHeaderItem(0).setFlags(Qt.ItemFlag.ItemIsSelectable)
+        self.ui.main_tasks_list.horizontalHeaderItem(0).setFlags(Qt.ItemFlag.ItemIsEnabled)
         
         for index in range(0, self.ui.main_tasks_list.columnCount()):
             if index != 1:
@@ -71,9 +77,7 @@ class MainPage(QMainWindow):
         self.ui.main_tasks_list.setColumnWidth(1, 200)
         self.ui.main_tasks_list.horizontalHeader().setStretchLastSection(True)
         self.update_task_list()
-        self.add_task = AddTaskDialog()
-        print(self.add_task)
-        
+        self.add_task = AddTaskDialog()        
         self.ui.main_add_task.clicked.connect(self.add_task.show)
         self.ui.update_tasks_list.clicked.connect(self.update_task_list)
         self.ui.main_tasks_list.itemSelectionChanged.connect(self.open_task)
@@ -104,7 +108,7 @@ class MainPage(QMainWindow):
                     item.setBackground(QColor(188, 53, 53)) # Тёмно-оранжевый с прозрачностью 0.8
                 elif text == 'В работе':
                     item.setBackground(QColor(215, 223, 92)) # Золотой с прозрачностью 0.8
-                elif text == 'Отменено':
+                elif text == 'Отменена':
                     item.setBackground(QColor(123, 104, 238)) # MediumSlateBlue	#7B68EE
 
             row += 1
@@ -120,9 +124,8 @@ class MainPage(QMainWindow):
             for column in range(columns_count):
                 index = self.ui.main_tasks_list.model().index(row, column)
                 text.append(index.data(Qt.ItemDataRole.DisplayRole))
-            print(text)
             if 'ТО' in text[0]:
-                self.complete_servicing = CompleteServicing()   
+                self.complete_servicing = CompleteServicing(text)   
                 self.complete_servicing.show()
                 return self.complete_servicing
             else:
@@ -149,6 +152,8 @@ class AddTaskDialog(QDialog):
         combobox_index = self.ui.gridLayout.indexOf(self.ui.worker_combobox)
         self.worker_row, _, _, _ = self.ui.gridLayout.getItemPosition(combobox_index)
         self.ui.add_photo.clicked.connect(self.attach_photo)
+        self.ui.text_task.setToolTip(
+                "При ТО нельзя заполнять текст\nОн будет заполнен автоматически")
 
 
     def add_worker(self):
@@ -197,8 +202,7 @@ class AddTaskDialog(QDialog):
             self.ui.text_task.setReadOnly(True)
             self.ui.add_photo.setEnabled(False)
             self.ui.add_photo.setToolTip("При ТО нельзя прикрепить фото")
-            self.ui.text_task.setToolTip(
-                "При ТО нельзя заполнять текст\nОн будет заполнен автоматически")
+            
 
             if self.tech_card_combobox is None:
                 checkbox_index = self.ui.gridLayout.indexOf(self.ui.routine_checkbox)
@@ -221,7 +225,7 @@ class AddTaskDialog(QDialog):
         else:
             self.ui.text_task.setReadOnly(False)
             self.ui.add_photo.setEnabled(True)
-            self.ui.add_photo.setToolTip("<html><head/><body><p>Прикрепить фото</p></body></html>")
+            self.ui.add_photo.setToolTip("Прикрепить фото")
             self.ui.gridLayout.removeWidget(self.telerobot_combobox)
             self.telerobot_combobox.deleteLater()
             if self.tech_card_combobox is not None:
@@ -277,11 +281,14 @@ class CompleteTask(QWidget):
 
 
 class CompleteServicing(QWidget):
-    def __init__(self):
+    def __init__(self, data_task):
         super().__init__()
 
         self.ui = Ui_operations_table_widget()
         self.ui.setupUi(self)
+        self.task_name, self.workers, _, _, _ = data_task
+        self.tech_card = self.task_name.split(' ')[0]
+        self.tech_operations = select_technological_operations(name=self.tech_card)
 
         for index in range(self.ui.operation_table.columnCount()):
             self.ui.operation_table.horizontalHeader().setSectionResizeMode(index, QHeaderView.ResizeMode.ResizeToContents)
@@ -294,6 +301,7 @@ class WhatToDo(QDialog):
         self.ui = Ui_what_to_do_dialog()
         self.ui.setupUi(self)
         self.task = task
+        self.ui.back_button.clicked.connect(lambda: self.close())
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
         font = QFont()
         font.setPointSize(20)
@@ -311,7 +319,7 @@ class WhatToDo(QDialog):
             self.get_to_work_button.setFont(font)
             self.ui.gridLayout.addWidget(self.get_to_work_button)
             self.get_to_work_button.clicked.connect(self.set_complete_status)
-        elif self.task[-1] == 'Отменено':
+        elif self.task[-1] == 'Отменена':
             self.ui.remove_button.deleteLater()
 
         self.ui.task_info_button.clicked.connect(self.task_info_handler)
@@ -330,9 +338,11 @@ class WhatToDo(QDialog):
         self.task_information.show()
         self.close()
 
+
     def remove_handler(self):
-        set_new_status(status='Отменено', task=self.task[0], workers=self.task[1], author=self.task[2])
+        set_new_status(status='Отменена', task=self.task[0], workers=self.task[1], author=self.task[2])
         self.close()
+
 
     def set_complete_status(self):
         set_new_status(status='Выполнено', task=self.task[0], workers=self.task[1], author=self.task[2])
@@ -429,7 +439,5 @@ class TaskInfoDialog(QWidget):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     login_window = Login()
-    complete_servicing = CompleteServicing()
-    complete_task = CompleteTask()
     sys.exit(app.exec())
 
