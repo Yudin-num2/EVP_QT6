@@ -24,7 +24,7 @@
       <enum>QAbstractScrollArea::AdjustToContents</enum>
      </property>
      <property name="columnCount">
-      <number>4</number>
+      <number>2</number>
      </property>
      <attribute name="horizontalHeaderStretchLastSection">
       <bool>false</bool>
@@ -36,32 +36,29 @@
      </column>
      <column>
       <property name="text">
-       <string>Показатель</string>
+       <string>Статус</string>
       </property>
      </column>
-     <column>
-      <property name="text">
-       <string>Значение</string>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>Выполнено</string>
-      </property>
-     </column>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
     </widget>
    </item>
    <item row="1" column="0">
     <widget class="QCheckBox" name="allin_checkbox">
      <property name="text">
       <string>Выполнить всё</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>

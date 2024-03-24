@@ -191,7 +191,8 @@ def select_technological_operations(name):
             with conn.cursor() as cur:
                 cur.execute("SELECT operations FROM technological_cards WHERE name = %s", (name,))
                 rows = cur.fetchall()
-                return rows
+                result = reversed_json_data = dict(reversed(rows[0][0].items()))
+                return result
 
     except Exception as exc:
         logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')
