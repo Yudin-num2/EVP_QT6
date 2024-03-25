@@ -300,6 +300,7 @@ class CompleteServicing(QWidget):
         self.tech_card = self.task_name.split(' ')[0]
         self.tech_operations = select_technological_operations(
             name=self.tech_card)
+        self.ui.allin_checkbox.stateChanged.connect(self.on_clicked_all_in)
         self.upload_json = {}
         self.all_buttons = []
         font = QtGui.QFont()
@@ -310,7 +311,7 @@ class CompleteServicing(QWidget):
         for index in range(self.ui.operation_table.columnCount()):
             self.ui.operation_table.horizontalHeader().setSectionResizeMode(
                 index, QHeaderView.ResizeMode.ResizeToContents)
-        
+
         for key, value in self.tech_operations.items():
             rowPosition = self.ui.operation_table.rowCount()
             self.ui.operation_table.insertRow(rowPosition)
@@ -331,12 +332,38 @@ class CompleteServicing(QWidget):
                 self.button.setChecked(False)
                 self.button.setStyleSheet("background-color: red; margin: 2px")
                 self.button.setObjectName(f'button_{num}')
-                self.button.clicked.connect(lambda checked, operation=operation: self.on_clicked_button(checked, operation))
+                self.button.clicked.connect(
+                    lambda checked, operation=operation: self.on_clicked_button(checked, operation))
                 self.upload_json[operation] = 0
                 self.all_buttons.append(self.button)
                 self.ui.operation_table.setCellWidget(
                     rowPosition, 1, self.button)
+        self.indicators = []
+        self.all_indicators = select_indicators()
+        self.ui.plus_button.clicked.connect(self.add_indicator)
+        self.ui.minus_button.clicked.connect(self.remove_indicator)
 
+    def add_indicator(self):
+        new_combobox = QComboBox()
+        new_combobox.setMaximumWidth(350)
+        new_combobox.addItems(self.all_indicators)
+        new_combobox.setMaximumHeight(30)
+        line_edit = QLineEdit()  # TODO Вместо lineedit нужен DoubleEdit (или как-то так), но где-то нужен будет ComboBox(для указания "OK\NOK", а не числа)
+        self.ui.gridLayout.addWidget(
+            new_combobox, self.ui.gridLayout.rowCount(), 0)
+        self.ui.gridLayout.addWidget(
+            line_edit, self.ui.gridLayout.rowCount(), 1, 1, 2)
+        self.indicators.append([new_combobox, line_edit])
+
+    def remove_indicator(self):
+        if len(self.indicators) > 0:
+            widgets = self.indicators[-1]
+            for widget in widgets:
+                widget.deleteLater()
+            self.indicators.pop()
+        else:
+            QMessageBox.warning(
+                self, "Ошибка", "Не указано ни одного контролируемого показателя для удаления")
 
     def on_clicked_button(self, checked, operation):
         button = self.sender()
@@ -346,9 +373,22 @@ class CompleteServicing(QWidget):
         else:
             button.setStyleSheet("background-color: red; margin: 2px")
             self.upload_json[operation] = 0
-#TODO Добавил массив всех кнопок, далее необходимо реализовать функцию обработки события смены состояния чекбокса "Выполнить всё",
-            #функции закрытия окна, добавления в БД (продумать как лучше сделать, чтобы потом было удобно обрабатывать), реализовать
-            #возможность добавления контролируемых показателей
+
+    def on_clicked_all_in(self, state):
+        if state == 2:
+            for button in self.all_buttons:
+                button.setStyleSheet("background-color: green; margin: 2px")
+            self.upload_json = {key: 1 for key in self.upload_json}
+        else:
+            for button in self.all_buttons:
+                button.setStyleSheet("background-color: red; margin: 2px")
+            self.upload_json = {key: 0 for key in self.upload_json}
+
+
+# TODO Добавил массив всех кнопок, далее необходимо реализовать функцию обработки события смены состояния чекбокса "Выполнить всё",
+            # функции закрытия окна, добавления в БД (продумать как лучше сделать, чтобы потом было удобно обрабатывать), реализовать
+            # возможность добавления контролируемых показателей
+
 
 class WhatToDo(QDialog):
     def __init__(self, task, parent_size) -> None:
@@ -403,7 +443,8 @@ class WhatToDo(QDialog):
 
     def set_complete_status(self):
         if 'ТО' in self.data[1].split('-'):
-            self.complete_servicing = CompleteServicing(self.task, self.main_size)
+            self.complete_servicing = CompleteServicing(
+                self.task, self.main_size)
             self.complete_servicing.show()
         else:
             self.what_eliminated = WhatHasBeenDone()
