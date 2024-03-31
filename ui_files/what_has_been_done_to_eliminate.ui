@@ -6,23 +6,29 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>608</width>
-    <height>484</height>
+    <width>594</width>
+    <height>562</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>Что было сделано?</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+   <item row="2" column="2">
+    <widget class="QPushButton" name="plus_button">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>+</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
-    <widget class="QLabel" name="label_spare_parts">
+   <item row="2" column="0">
+    <widget class="QLabel" name="label">
      <property name="font">
       <font>
        <italic>true</italic>
@@ -37,23 +43,30 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QTextEdit" name="textEdit_what_eliminated">
-     <property name="toolTip">
-      <string>Перечень проделанных операций</string>
+   <item row="2" column="1">
+    <widget class="QPushButton" name="minus_button">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
      </property>
-     <property name="statusTip">
-      <string/>
+     <property name="text">
+      <string>-</string>
      </property>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="3">
+    <widget class="QPlainTextEdit" name="plainTextEtextEdit_what_eliminateddit">
      <property name="placeholderText">
       <string>Что было сделано для устранения?</string>
      </property>
     </widget>
    </item>
-   <item row="2" column="0">
-    <widget class="Line" name="line">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+   <item row="0" column="0" colspan="3">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
     </widget>
    </item>

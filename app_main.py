@@ -4,18 +4,17 @@ from PyQt6.QtGui import QFont, QPixmap, QColor
 from PyQt6.QtCore import Qt, QFileInfo, QDateTime
 from PyQt6.QtWidgets import (QApplication, QWidget, QMessageBox, QMainWindow, QTableWidgetItem,
                              QHeaderView, QDialog, QComboBox, QLabel, QLineEdit, QFileDialog, QDateTimeEdit, QDialogButtonBox,
-                             QScrollArea, QPushButton, QCompleter)
+                             QScrollArea, QPushButton, QCompleter, QDoubleSpinBox)
 from login_form import Ui_login_form
 from main_page import *
 from add_task import Ui_Dialog
 from operations_table_widget import Ui_operations_table_widget
-from complete_task import Ui_elimination_task
 from what_to_do import Ui_what_to_do_dialog
 from task_info_dialog import Ui_task_info_widget
 from what_eliminated import Ui_what_eliminated
+from sockets_T01 import Ui_SocketsT01
 from database import *
 import shutil
-import datetime
 
 __version__ = '0.0.2'
 path_to_save_image = 'saved_photo_path/'
@@ -90,13 +89,18 @@ class MainPage(QMainWindow):
         self.ui.update_tasks_list.clicked.connect(self.update_task_list)
         self.ui.main_tasks_list.itemSelectionChanged.connect(self.open_task)
         self.ui.update_tasks_list.setToolTip('Обновить таблицу')
+        self.ui.actionTelerobot_1.triggered.connect(lambda: self.open_sockets(self.ui.actionTelerobot_1.text()))
+        self.sockets01 = None
+        self.different_sockets = None
+        
+        self.ui.statusbar.showMessage(f'Версия приложения: {__version__}')
 
     def update_task_list(self):
         self.ui.main_tasks_list.setRowCount(0)
         row = 0
         tasks = select_tasks()
         for task in tasks:
-            _, task_name, workers_name, status, tech_card, path_to_photo, timestamp, author = task
+            _, task_name, workers_name, status, tech_card, path_to_photo, timestamp, author, *_ = task
             self.ui.main_tasks_list.insertRow(row)
 
             for col, text in enumerate([task_name, workers_name, author, timestamp.strftime("%d.%m.%Y %H:%M"), status]):
@@ -122,7 +126,6 @@ class MainPage(QMainWindow):
                 elif text == 'Отменена':
                     # MediumSlateBlue  #7B68EE
                     item.setBackground(QColor(123, 104, 238))
-
             row += 1
         self.ui.main_tasks_list.resizeRowsToContents()
 
@@ -139,6 +142,12 @@ class MainPage(QMainWindow):
             self.what_to_do_dialog = WhatToDo(text, self.size())
             self.what_to_do_dialog.show()
             return self.what_to_do_dialog
+
+    def open_sockets(self, machine):
+        print(machine)
+        if machine == 'Телеробот 1':
+            self.sockets01 = SocketsT01()
+            self.sockets01.show()
 
 
 class AddTaskDialog(QDialog):
@@ -256,39 +265,6 @@ class AddTaskDialog(QDialog):
             shutil.copy(selected_file, save_path)
 
 
-class CompleteTask(QWidget):
-    def __init__(self):
-        super().__init__()
-
-        self.ui = Ui_elimination_task()
-        self.ui.setupUi(self)
-        self.indicators = []
-        self.all_indicators = select_indicators()
-        self.ui.plus_indicator_combobox.clicked.connect(self.add_indicator)
-        self.ui.minus_indicator_combobox.clicked.connect(self.remove_indicator)
-
-    def add_indicator(self):
-        new_combobox = QComboBox()
-        new_combobox.setMaximumWidth(350)
-        new_combobox.addItems(self.all_indicators)
-        new_combobox.setMaximumHeight(30)
-        line_edit = QLineEdit()
-        row_count = self.ui.gridLayout.rowCount()
-        self.ui.gridLayout.addWidget(new_combobox, row_count, 0)
-        self.ui.gridLayout.addWidget(line_edit, row_count, 1, 1, 2)
-        self.indicators.append([new_combobox, line_edit])
-
-    def remove_indicator(self):
-        if len(self.indicators) > 0:
-            widgets = self.indicators[-1]
-            for widget in widgets:
-                widget.deleteLater()
-            self.indicators.pop()
-        else:
-            QMessageBox.warning(
-                self, "Ошибка", "Не указано ни одного контролируемого показателя для удаления")
-
-
 class CompleteServicing(QWidget):
     def __init__(self, data_task, parent_size):
         super().__init__()
@@ -338,7 +314,6 @@ class CompleteServicing(QWidget):
                 self.all_buttons.append(self.button)
                 self.ui.operation_table.setCellWidget(
                     rowPosition, 1, self.button)
-        self.indicators = []
         self.all_indicators = select_indicators()
         self.ui.plus_button.clicked.connect(self.add_indicator)
         self.ui.minus_button.clicked.connect(self.remove_indicator)
@@ -348,19 +323,21 @@ class CompleteServicing(QWidget):
         new_combobox.setMaximumWidth(350)
         new_combobox.addItems(self.all_indicators)
         new_combobox.setMaximumHeight(30)
-        line_edit = QLineEdit()  # TODO Вместо lineedit нужен DoubleEdit (или как-то так), но где-то нужен будет ComboBox(для указания "OK\NOK", а не числа)
+        # TODO Вместо lineedit нужен DoubleEdit (или как-то так), но где-то нужен
+        line_edit = QLineEdit()
+        # будет ComboBox(для указания "OK\NOK", а не числа). Взять с работы контролируемые показатели
         self.ui.gridLayout.addWidget(
             new_combobox, self.ui.gridLayout.rowCount(), 0)
         self.ui.gridLayout.addWidget(
             line_edit, self.ui.gridLayout.rowCount(), 1, 1, 2)
-        self.indicators.append([new_combobox, line_edit])
+        self.repair_parts.append([new_combobox, line_edit])
 
     def remove_indicator(self):
-        if len(self.indicators) > 0:
-            widgets = self.indicators[-1]
+        if len(self.repair_parts) > 0:
+            widgets = self.repair_parts[-1]
             for widget in widgets:
                 widget.deleteLater()
-            self.indicators.pop()
+            self.repair_parts.pop()
         else:
             QMessageBox.warning(
                 self, "Ошибка", "Не указано ни одного контролируемого показателя для удаления")
@@ -447,7 +424,7 @@ class WhatToDo(QDialog):
                 self.task, self.main_size)
             self.complete_servicing.show()
         else:
-            self.what_eliminated = WhatHasBeenDone()
+            self.what_eliminated = WhatHasBeenDone(self.task)
             self.what_eliminated.show()
         self.close()
 
@@ -464,7 +441,7 @@ class TaskInfoDialog(QWidget):
             QDialogButtonBox.StandardButton.Close).clicked.connect(self.close)
         self.users = get_users()
         self.comboboxes = []
-        _, self.name, self.task_workers, self.status, self.tech_card, self.path_to_photo, self.timestamp, self.author = data_task
+        _, self.name, self.task_workers, self.status, self.tech_card, self.path_to_photo, self.timestamp, self.author, *_ = data_task
         self.task_workers = self.task_workers.split(', ')
         self.ui.name_line_edit.setText(self.name)
         font = QFont()
@@ -548,18 +525,62 @@ class TaskInfoDialog(QWidget):
 
 
 class WhatHasBeenDone(QWidget):
-    def __init__(self) -> None:
+    def __init__(self, task) -> None:
         super().__init__()
         self.ui = Ui_what_eliminated()
-        self.ui.setupUi()
+        self.ui.setupUi(self)
         self.ui.buttonBox.accepted.connect(self.complete)
-        self.ui.buttonBox.rejected.connect(self.close())
+        self.ui.buttonBox.rejected.connect(lambda: self.close())
+        self.ui.plus_button.clicked.connect(self.add_repair_parts)
+        self.ui.minus_button.clicked.connect(self.remove_repair_parts)
+        self.repair_parts_boxes = []
+        self.repair_parts_list = select_repair_parts()
+        self.task = task
+
+    def add_repair_parts(self):
+        new_combobox = QComboBox()
+        new_combobox.setEditable(True)
+        completer = QCompleter([rep_part[0]
+                               for rep_part in self.repair_parts_list])
+        completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        new_combobox.setCompleter(completer)
+        new_combobox.lineEdit().setPlaceholderText('Выберите запчасть')
+        double = QDoubleSpinBox()
+        row_count = self.ui.gridLayout.rowCount()
+        self.ui.gridLayout.addWidget(new_combobox, row_count, 0)
+        self.ui.gridLayout.addWidget(double, row_count, 1)
+        self.repair_parts_boxes.append([new_combobox, double])
+
+    def remove_repair_parts(self):
+        if len(self.repair_parts_boxes) > 0:
+            widgets = self.repair_parts_boxes[-1]
+            for widget in widgets:
+                widget.deleteLater()
+            self.repair_parts_boxes.pop()
+        else:
+            QMessageBox.warning(
+                self, "Ошибка", "Нет ни одной запчасти для удаления")
 
     def complete(self):
+        if len(self.repair_parts_boxes) <= 0:
+            set_new_status(
+                status='Выполнено', task=self.task[0], workers=self.task[1], author=self.task[2])
+        else:
+            repair_parts = []
+            for rep_part in self.repair_parts_boxes:
+                r_part, count = rep_part[0].currentText(), rep_part[1].value()
+                repair_parts.append([r_part, count])
+        result = '; '.join([f'{item[0]}, {item[1]}' for item in repair_parts])
         set_new_status(
-            status='Выполнено', task=self.task[0], workers=self.task[1], author=self.task[2])
+            status='Выполнено', task=self.task[0], workers=self.task[1], author=self.task[2], repair_parts=result)
         self.close()
 
+
+class SocketsT01(QWidget):
+    def __init__(self) -> None:
+        super().__init__()
+        self.ui = Ui_SocketsT01()
+        self.ui.setupUi(self)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

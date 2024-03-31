@@ -7,6 +7,8 @@ logging.basicConfig(level=logging.INFO)
 config = configparser.ConfigParser()
 config.read('config.ini')
 
+HOST = config.get('Postgre', 'host')
+PORT = config.get('Postgre', 'port')
 USERNAME = config.get('Postgre', 'user')
 PASSWORD = config.get('Postgre', 'password')
 DATABASE = config.get('Postgre', 'database')
@@ -14,8 +16,8 @@ DATABASE = config.get('Postgre', 'database')
 def authorization(login: str, passw: str) -> list:
 
     try:
-        with psycopg.connect(host="127.0.0.1",
-                              port=5432,
+        with psycopg.connect(host=HOST,
+                              port=PORT,
                               user=USERNAME,
                               password=PASSWORD,
                               dbname=DATABASE) as conn:
@@ -29,8 +31,8 @@ def authorization(login: str, passw: str) -> list:
 
 def get_users() -> list:
     try:
-        with psycopg.connect(host="127.0.0.1",
-                              port=5432,
+        with psycopg.connect(host=HOST,
+                              port=PORT,
                               user=USERNAME,
                               password=PASSWORD,
                               dbname=DATABASE) as conn:
@@ -49,8 +51,8 @@ def get_users() -> list:
 def select_tasks() -> list:
 
     try:
-        with psycopg.connect(host="127.0.0.1",
-                              port=5432,
+        with psycopg.connect(host=HOST,
+                              port=PORT,
                               user=USERNAME,
                               password=PASSWORD,
                               dbname=DATABASE) as conn:
@@ -66,8 +68,8 @@ def select_tasks() -> list:
 def add_task(task: str, workers: str = None, tech_card: str = None, photo_name: str = None) -> None:
 
     try:
-        with psycopg.connect(host="127.0.0.1",
-                              port=5432,
+        with psycopg.connect(host=HOST,
+                              port=PORT,
                               user=USERNAME,
                               password=PASSWORD,
                               dbname=DATABASE) as conn:
@@ -82,8 +84,8 @@ def add_task(task: str, workers: str = None, tech_card: str = None, photo_name: 
 def select_technological_cards() -> list:
 
     try:
-        with psycopg.connect(host="127.0.0.1",
-                              port=5432,
+        with psycopg.connect(host=HOST,
+                              port=PORT,
                               user=USERNAME,
                               password=PASSWORD,
                               dbname=DATABASE) as conn:
@@ -98,8 +100,8 @@ def select_technological_cards() -> list:
 
 def select_machines_name() -> list:
     try:
-        with psycopg.connect(host="127.0.0.1",
-                              port=5432,
+        with psycopg.connect(host=HOST,
+                              port=PORT,
                               user=USERNAME,
                               password=PASSWORD,
                               dbname=DATABASE) as conn:
@@ -114,28 +116,23 @@ def select_machines_name() -> list:
 
 def select_indicators() -> list:
     try:
-        with psycopg.connect(host="127.0.0.1",
-                              port=5432,
+        with psycopg.connect(host=HOST,
+                              port=PORT,
                               user=USERNAME,
                               password=PASSWORD,
                               dbname=DATABASE) as conn:
             with conn.cursor() as cur:
-                cur.execute("SELECT name FROM indicators")
+                cur.execute("SELECT * FROM indicators")
                 indicators = cur.fetchall()
-                indicators_list = []
-                for indicator in indicators:
-                    ind = list(indicator[0])
-                    indicators_list.append(' '.join(ind))
-                return indicators_list
-
+                return indicators
     except Exception as exc:
         logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')
 
 
 def select_task(task) -> list:
     try:
-        with psycopg.connect(host="127.0.0.1",
-                              port=5432,
+        with psycopg.connect(host=HOST,
+                              port=PORT,
                               user=USERNAME,
                               password=PASSWORD,
                               dbname=DATABASE) as conn:
@@ -148,17 +145,17 @@ def select_task(task) -> list:
         logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')
 
 
-def set_new_status(task, status, workers, author) -> None:
+def set_new_status(task, status, workers, author, repair_parts = None) -> None:
 
     try:
-        with psycopg.connect(host="127.0.0.1",
-                              port=5432,
+        with psycopg.connect(host=HOST,
+                              port=PORT,
                               user=USERNAME,
                               password=PASSWORD,
                               dbname=DATABASE) as conn:
             with conn.cursor() as cur:
-                cur.execute("""UPDATE current_tasks SET status = %s 
-                            WHERE task = %s AND workers = %s AND author = %s""", (status, task, workers, author))
+                cur.execute("""UPDATE current_tasks SET status = %s, spent_repair_parts = %s
+                            WHERE task = %s AND workers = %s AND author = %s""", (status, repair_parts, task, workers, author))
                 conn.commit()
 
     except Exception as exc:
@@ -167,8 +164,8 @@ def set_new_status(task, status, workers, author) -> None:
 
 def update_task_info(prev_task_name, prev_workers, task, workers) -> None:
     try:
-        with psycopg.connect(host="127.0.0.1",
-                              port=5432,
+        with psycopg.connect(host=HOST,
+                              port=PORT,
                               user=USERNAME,
                               password=PASSWORD,
                               dbname=DATABASE) as conn:
@@ -183,8 +180,8 @@ def update_task_info(prev_task_name, prev_workers, task, workers) -> None:
 
 def select_technological_operations(name):
     try:
-        with psycopg.connect(host="127.0.0.1",
-                              port=5432,
+        with psycopg.connect(host=HOST,
+                              port=PORT,
                               user=USERNAME,
                               password=PASSWORD,
                               dbname=DATABASE) as conn:
@@ -196,3 +193,20 @@ def select_technological_operations(name):
 
     except Exception as exc:
         logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')
+
+
+def select_repair_parts() -> list:
+    try:
+        with psycopg.connect(host=HOST,
+                              port=PORT,
+                              user=USERNAME,
+                              password=PASSWORD,
+                              dbname=DATABASE) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT name FROM repair_parts")
+                rows = cur.fetchall()
+                return rows
+
+    except Exception as exc:
+        logging.warning(f'[WARNING] Ошибка работы с БД: {exc}')
+
