@@ -15,6 +15,8 @@ from what_eliminated import Ui_what_eliminated
 from sockets_T01 import Ui_SocketsT01
 from database import *
 import shutil
+from functools import partial
+from socket_status import Ui_socket_status
 
 __version__ = '0.0.2'
 path_to_save_image = 'saved_photo_path/'
@@ -89,10 +91,11 @@ class MainPage(QMainWindow):
         self.ui.update_tasks_list.clicked.connect(self.update_task_list)
         self.ui.main_tasks_list.itemSelectionChanged.connect(self.open_task)
         self.ui.update_tasks_list.setToolTip('Обновить таблицу')
-        self.ui.actionTelerobot_1.triggered.connect(lambda: self.open_sockets(self.ui.actionTelerobot_1.text()))
+        self.ui.actionTelerobot_1.triggered.connect(
+            lambda: self.open_sockets(self.ui.actionTelerobot_1.text()))
         self.sockets01 = None
         self.different_sockets = None
-        
+
         self.ui.statusbar.showMessage(f'Версия приложения: {__version__}')
 
     def update_task_list(self):
@@ -147,6 +150,7 @@ class MainPage(QMainWindow):
         print(machine)
         if machine == 'Телеробот 1':
             self.sockets01 = SocketsT01()
+            self.sockets01.resize(self.size())
             self.sockets01.show()
 
 
@@ -581,6 +585,37 @@ class SocketsT01(QWidget):
         super().__init__()
         self.ui = Ui_SocketsT01()
         self.ui.setupUi(self)
+
+        sections = [
+            (48, "Lid"),
+            (48, "Frame"),
+            (48, "Cutter"),
+            (12, "Lid12"),
+            (12, "Frame12"),
+            (12, "Cutter12")
+        ]
+
+        for section_buttons, section_suffix in sections:
+            for i in range(1, section_buttons + 1):
+                button_name = f"pushButton_{i}_{section_suffix}"
+                current_button = getattr(self.ui, button_name)
+                current_button.clicked.connect(
+                    partial(self.on_button_click, button_name))
+
+    def on_button_click(self, button_name):
+        print(f"Была нажата кнопка: {button_name}")
+        self.socket_status = SocketStatus(button_name)
+        self.socket_status.show()
+
+
+class SocketStatus(QDialog):
+    def __init__(self, button) -> None:
+        super().__init__()
+        self.ui = Ui_socket_status()
+        self.ui.setupUi(self)
+        print(button)
+        # TODO добавить обработку нажатия на кнопку с причиной (менять цвет кнопки-родителя)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
